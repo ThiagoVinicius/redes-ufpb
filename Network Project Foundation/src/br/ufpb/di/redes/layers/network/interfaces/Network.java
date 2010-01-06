@@ -157,13 +157,10 @@ public abstract class Network extends Layer<Transport, DataLink> {
      * @param data PDU a ser enviada.
      * @param dest_ip mac de destino.
      *
-     * @throws InterruptedException Esta excecao nao e' boa. Se for lancada,
-     * reze.
-     *
      * @throws IllegalStateException Sera lancada se nao houver entidade
      * amarrada ao topo desta entidade.
      */
-    public void send(InterlayerData data, int dest_ip) throws InterruptedException  {
+    public void send(InterlayerData data, int dest_ip) {
         EntityState state = getState();
         if (state == EntityState.RUNNING) {
             logger.debug("Dados recebidos da rede. Para a fila!");
@@ -171,9 +168,8 @@ public abstract class Network extends Layer<Transport, DataLink> {
                 ToSendMessage tmp = new ToSendMessage(data, dest_ip);
                 sendBuffer.put(tmp);
             } catch (InterruptedException e) {
-                logger.error("Interrompido. Repassando interrupcao.", e);
+                logger.error("Interrompido.", e);
                 Thread.currentThread().interrupt();
-                throw e;
             }
         } else {
             logger.warn("Dados recebidos da rede, porem em estado invalido: {}.", state);
@@ -195,14 +191,10 @@ public abstract class Network extends Layer<Transport, DataLink> {
      * @param datalink_id identificacao da camada de enlace que executou a
      * chamada
      *
-     * @throws InterruptedException Esta excecao nao e' boa. Se for lancada,
-     * reze.
-     *
      * @throws IllegalStateException Sera lancada se nao houver entidade
      * amarrada ao topo desta entidade.
      */
-    public void received(InterlayerData data, int source_mac, int datalink_id)
-            throws InterruptedException {
+    public void received(InterlayerData data, int source_mac, int datalink_id) {
         EntityState state = getState();
         if (state == EntityState.RUNNING) {
             logger.debug("Dados recebidos de fisica. Para a fila!");
@@ -210,9 +202,8 @@ public abstract class Network extends Layer<Transport, DataLink> {
                 ToReceiveMessage tmp = new ToReceiveMessage(data, source_mac, datalink_id);
                 receivedBuffer.put(tmp);
             } catch (InterruptedException e) {
-                logger.error("Interrompido. Repassando interrupcao.", e);
+                logger.error("Interrompido.", e);
                 Thread.currentThread().interrupt();
-                throw e;
             }
         } else {
             logger.warn("Dados recebidos de fisica, porem em estado invalido: {}.", state);
@@ -224,7 +215,7 @@ public abstract class Network extends Layer<Transport, DataLink> {
     /**
      * Repassa data e source_mac, para a camada de cima.
      */
-    protected void bubbleUp (InterlayerData data, int source_ip) throws InterruptedException {
+    protected void bubbleUp (InterlayerData data, int source_ip) {
         logger.debug("Repassado dados para o transporte.");
         upLayer.received(data, source_ip);
     }
@@ -236,8 +227,7 @@ public abstract class Network extends Layer<Transport, DataLink> {
      * @param datalink_id Id do enlace a ser usado.
      * @throws InterruptedException
      */
-    protected void bubbleDown (InterlayerData data, int dest_mac, int datalink_id)
-            throws InterruptedException {
+    protected void bubbleDown (InterlayerData data, int dest_mac, int datalink_id) {
         logger.debug("Repassado dados para enlace ID = {}.", datalink_id);
         downLayer[datalink_id].send(data, dest_mac);
     }

@@ -66,14 +66,12 @@ public abstract class Physical extends Layer <DataLink, NullLayer> {
      * houver espaco imediatamente, bloqueia ate que haja espaco disponivel.
      *
      * @param data PDU a ser enviada.
-     * @throws InterruptedException Esta excecao nao e' boa. Se for lancada,
-     * reze.
      *
      * @throws IllegalStateException Sera lancada se nao houver entidade
      * amarrada ao topo desta entidade.
      */
     public synchronized final void send(InterlayerData data)
-            throws InterruptedException, IllegalStateException {
+            throws IllegalStateException {
 
         EntityState state = getState();
         if (state == EntityState.RUNNING) {
@@ -81,9 +79,8 @@ public abstract class Physical extends Layer <DataLink, NullLayer> {
             try {
                 downBuffer.put(data);
             } catch (InterruptedException e) {
-                logger.error("Interrompido. Repassando interrupcao.", e);
+                logger.error("Interrompido.", e);
                 Thread.currentThread().interrupt();
-                throw e;
             }
         } else {
             logger.warn("Dados recebidos do enlace, porem em estado invalido: {}.", state);
@@ -98,7 +95,7 @@ public abstract class Physical extends Layer <DataLink, NullLayer> {
      *
      * @param data dados a ser repassados.
      */
-    protected synchronized void bubbleUp (InterlayerData data) throws InterruptedException {
+    protected synchronized void bubbleUp (InterlayerData data) {
         logger.debug("Repassado dados para o enlace.");
         //if (upLayer != null) //isso nao deve acontecer normalmente
         upLayer.received(data);

@@ -78,13 +78,11 @@ public abstract class Transport extends Layer<NullLayer, Network> {
      * bubbleUp() normalmente se encarrega desta tarefa.
      *
      * @param data PDU recebida.
-     * @throws InterruptedException Esta excecao nao e' boa. Se for lancada,
-     * reze.
      *
      * @throws IllegalStateException Sera lancada se nao houver entidade
      * amarrada ao topo desta entidade.
      */
-    public void received(InterlayerData data, int source_ip) throws InterruptedException {
+    public void received(InterlayerData data, int source_ip) {
         EntityState state = getState();
         if (state == EntityState.RUNNING) {
             logger.debug("Dados recebidos de fisica. Para a fila!");
@@ -92,9 +90,8 @@ public abstract class Transport extends Layer<NullLayer, Network> {
                 ToReceiveMessage tmp = new ToReceiveMessage(data, source_ip);
                 receivedBuffer.put(tmp);
             } catch (InterruptedException e) {
-                logger.error("Interrompido. Repassando interrupcao.", e);
+                logger.error("Interrompido.", e);
                 Thread.currentThread().interrupt();
-                throw e;
             }
         } else {
             logger.warn("Dados recebidos de fisica, porem em estado invalido: {}.", state);
@@ -108,7 +105,7 @@ public abstract class Transport extends Layer<NullLayer, Network> {
      * @param data
      * @throws InterruptedException
      */
-    public void bubbleDown (InterlayerData data, int dest_ip) throws InterruptedException {
+    public void bubbleDown (InterlayerData data, int dest_ip) {
         logger.debug("Repassando mensagem para a camada de rede.");
         downLayer.send(data, dest_ip);
     }
