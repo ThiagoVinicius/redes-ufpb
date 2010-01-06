@@ -143,13 +143,10 @@ public abstract class DataLink extends Layer<Network, Physical> {
      * @param data PDU a ser enviada.
      * @param dest_mac mac de destino.
      * 
-     * @throws InterruptedException Esta excecao nao e' boa. Se for lancada,
-     * reze.
-     *
      * @throws IllegalStateException Sera lancada se nao houver entidade
      * amarrada ao topo desta entidade.
      */
-    public void send(InterlayerData data, int dest_mac) throws InterruptedException  {
+    public void send(InterlayerData data, int dest_mac) {
         EntityState state = getState();
         if (state == EntityState.RUNNING) {
             logger.debug("Dados recebidos da rede. Para a fila!");
@@ -157,9 +154,8 @@ public abstract class DataLink extends Layer<Network, Physical> {
                 ToSendMessage tmp = new ToSendMessage(data, dest_mac);
                 sendBuffer.put(tmp);
             } catch (InterruptedException e) {
-                logger.error("Interrompido. Repassando interrupcao.", e);
+                logger.error("Interrompido.", e);
                 Thread.currentThread().interrupt();
-                throw e;
             }
         } else {
             logger.warn("Dados recebidos da rede, porem em estado invalido: {}.", state);
@@ -177,22 +173,19 @@ public abstract class DataLink extends Layer<Network, Physical> {
      * bubbleUp() normalmente se encarrega desta tarefa.
      *
      * @param data PDU recebida.
-     * @throws InterruptedException Esta excecao nao e' boa. Se for lancada,
-     * reze.
      *
      * @throws IllegalStateException Sera lancada se nao houver entidade
      * amarrada ao topo desta entidade.
      */
-    public void received(InterlayerData data) throws InterruptedException {
+    public void received(InterlayerData data) {
         EntityState state = getState();
         if (state == EntityState.RUNNING) {
             logger.debug("Dados recebidos de fisica. Para a fila!");
             try {
                 receivedBuffer.put(data);
             } catch (InterruptedException e) {
-                logger.error("Interrompido. Repassando interrupcao.", e);
+                logger.error("Interrompido.", e);
                 Thread.currentThread().interrupt();
-                throw e;
             }
         } else {
             logger.warn("Dados recebidos de fisica, porem em estado invalido: {}.", state);
@@ -204,7 +197,7 @@ public abstract class DataLink extends Layer<Network, Physical> {
     /**
      * Repassa data e source_mac, para a camada de cima.
      */
-    protected void bubbleUp (InterlayerData data, int source_mac) throws InterruptedException {
+    protected void bubbleUp (InterlayerData data, int source_mac) {
         logger.debug("Repassado dados para a rede.");
         upLayer.received(data, source_mac, id);
     }
@@ -214,7 +207,7 @@ public abstract class DataLink extends Layer<Network, Physical> {
      * @param data
      * @throws InterruptedException
      */
-    protected void bubbleDown (InterlayerData data) throws InterruptedException {
+    protected void bubbleDown (InterlayerData data) {
         logger.debug("Repassado dados para fisica.");
         downLayer.send(data);
     }

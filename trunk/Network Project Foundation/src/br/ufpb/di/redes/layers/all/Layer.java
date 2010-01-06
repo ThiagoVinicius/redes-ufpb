@@ -93,7 +93,7 @@ public abstract class Layer <U extends Layer, D extends Layer> implements Joint<
 //    }
 
     /**
-     * Cria uma amarrada com uma entidade da camada superior.
+     * Cria uma amarracao com uma entidade da camada superior.
      *
      * @param upLayer Entidade a ser amarrada
      *
