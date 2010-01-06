@@ -78,6 +78,7 @@ public abstract class Transport extends Layer<NullLayer, Network> {
      * bubbleUp() normalmente se encarrega desta tarefa.
      *
      * @param data PDU recebida.
+     * @param source_ip Ip que originou o pacote
      *
      * @throws IllegalStateException Sera lancada se nao houver entidade
      * amarrada ao topo desta entidade.
@@ -116,7 +117,7 @@ public abstract class Transport extends Layer<NullLayer, Network> {
      * A mensagem deve ser completamente processada e repassada para a camada
      * de cima, se necessário, antes que este metodo retorne.
      */
-    public abstract void processReceivedData(InterlayerData data, int source_ip);
+    protected abstract void processReceivedData(InterlayerData data, int source_ip);
 
     /**
      * Estabelece conexao com servidor remoto.
@@ -136,5 +137,11 @@ public abstract class Transport extends Layer<NullLayer, Network> {
      * @return
      */
     public abstract Connection listen(int local_port);
+    
+    protected abstract void close (Connection con);
+
+    protected abstract boolean isActive (Connection con);
+
+    protected abstract void put (Connection con, byte b);
 
 }

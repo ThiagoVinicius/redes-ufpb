@@ -9,6 +9,6 @@ package br.ufpb.di.redes.layers.transport.interfaces;
  *
  * @author Thiago
  */
-class ConnectionLostException extends Exception {
+public class ConnectionLostException extends Exception {
 
 }

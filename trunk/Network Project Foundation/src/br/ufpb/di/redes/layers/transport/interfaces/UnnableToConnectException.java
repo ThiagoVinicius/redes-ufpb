@@ -9,6 +9,6 @@ package br.ufpb.di.redes.layers.transport.interfaces;
  *
  * @author Thiago
  */
-class UnnableToConnectException extends Exception {
+public class UnnableToConnectException extends Exception {
 
 }
