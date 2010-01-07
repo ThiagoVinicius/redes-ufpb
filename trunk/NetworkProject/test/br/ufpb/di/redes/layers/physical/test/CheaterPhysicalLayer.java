@@ -45,11 +45,7 @@ public class CheaterPhysicalLayer extends Physical {
     }
 
     public void fakeReceived(InterlayerData data) {
-        try {
-            bubbleUp(data);
-        } catch (InterruptedException ex) {
-            logger.error("Pai nosso que estas no ceu...", ex);
-        }
+        bubbleUp(data);
     }
 
 }
