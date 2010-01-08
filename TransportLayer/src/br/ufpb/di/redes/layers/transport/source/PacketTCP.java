@@ -9,7 +9,7 @@ package br.ufpb.di.redes.layers.transport.source;
  *
  * @author Jailton
  */
-public class PackageTCP {
+public class PacketTCP {
 
     private String portLocal;
     private String portRemote;
@@ -18,13 +18,13 @@ public class PackageTCP {
     private String windowSize;
 
     private String ACK;
-    private String PSH;
+    private String RST;
     private String SYN;
     private String FIN;
 
     private String data;
 
-    public PackageTCP(String portLocal, String portRemote, String data) {
+    public PacketTCP(String portLocal, String portRemote, String data) {
         this.portLocal = portLocal;
         this.portRemote = portRemote;
         this.data = data;
@@ -33,7 +33,7 @@ public class PackageTCP {
     @Override
    public String toString() {
         return (portLocal + portRemote + sequenceNumber + ackNumber +
-                windowSize + ACK + PSH + SYN + FIN + data);
+                windowSize + ACK + RST + SYN + FIN + data);
     }
 
     public String getACKFlag() {
@@ -84,12 +84,12 @@ public class PackageTCP {
         this.portRemote = portRemote;
     }
 
-    public String getPSHFlag() {
-        return PSH;
+    public String getRSTFlag() {
+        return RST;
     }
 
-    public void setPSHFlag(String PSH) {
-        this.PSH = PSH;
+    public void setRSTFlag(String RST) {
+        this.RST = RST;
     }
 
     public String getSequenceNumber() {
