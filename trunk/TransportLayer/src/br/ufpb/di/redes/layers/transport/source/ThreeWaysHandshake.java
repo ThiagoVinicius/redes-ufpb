@@ -28,7 +28,8 @@ public class ThreeWaysHandshake {
                 packetConnection.getPortRemote(), "" );
 
         packet.setSequenceNumber( "010" );
-        packet.setAckNumber(packetConnection.getSequenceNumber());
+        int plus = parseStringToInt(packetConnection.getSequenceNumber()) + 1;
+        packet.setAckNumber(parseIntToString(plus));
         packet.setACKFlag( "1" );
         packet.setSYNFlag( "1" );
 
@@ -40,9 +41,41 @@ public class ThreeWaysHandshake {
                 packetReply.getPortRemote(), "" );
 
         packet.setSequenceNumber(packetReply.getAckNumber());
-        packet.setAckNumber(packetReply.getSequenceNumber());
+        int plus = parseStringToInt(packetReply.getSequenceNumber()) + 1;
+        packet.setAckNumber(parseIntToString(plus));
         packet.setSYNFlag("0");
         
         return packet;
     }
+
+     private int parseStringToInt( String value ) {
+
+         if(value.equals("000")) return 0;
+         if(value.equals("001")) return 1;
+         if(value.equals("010")) return 2;
+         if(value.equals("011")) return 3;
+         if(value.equals("100")) return 4;
+         if(value.equals("101")) return 5;
+         if(value.equals("110")) return 6;
+         if(value.equals("111")) return 7;
+
+         return 0;
+     }
+
+     private String parseIntToString( int value ){
+
+         switch(value){
+             case 0: return "000";
+             case 1: return "001";
+             case 2: return "010";
+             case 3: return "011";
+             case 4: return "100";
+             case 5: return "101";
+             case 6: return "110";
+             case 7: return "111";
+
+             default: return "000";
+         }
+     }
+
 }
