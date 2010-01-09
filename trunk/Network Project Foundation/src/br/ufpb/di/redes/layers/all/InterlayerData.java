@@ -23,7 +23,7 @@ import java.security.InvalidParameterException;
  *
  * @author Thiago
  */
-public abstract class InterlayerData {
+public class InterlayerData {
 
     private static final int BIT_0 =  (1 << 0);
     private static final int BIT_1 =  (1 << 1);
