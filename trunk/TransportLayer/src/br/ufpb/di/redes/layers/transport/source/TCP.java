@@ -22,13 +22,15 @@ import org.slf4j.LoggerFactory;
 public class TCP extends Transport implements IConstants {
     
     private static final Logger logger = LoggerFactory.getLogger(TCP.class);
+    private int source_ip;
     private int local_port = 0;
 
     ThreeWaysHandshake handshake = new ThreeWaysHandshake();
     List container = new LinkedList<ToReceiveMessage>();;
 
-    public TCP(Network downLayer) {
+    public TCP(Network downLayer, int source_ip) {
         super(downLayer);
+        this.source_ip = source_ip;
     }
 
      private static class ToReceiveMessage {
@@ -43,7 +45,7 @@ public class TCP extends Transport implements IConstants {
     @Override
     protected void processReceivedData(InterlayerData data, int source_ip) {
         ToReceiveMessage receive = new ToReceiveMessage(data, source_ip);
-        container.add(receive);
+        container.add(0, receive);
     }
 
     @Override
@@ -71,10 +73,10 @@ public class TCP extends Transport implements IConstants {
 
         String dataReceived = parseIntToString(message.data.data[0], NUM_BITS_HEADER);
 
-        PacketTCP p = new PacketTCP(dataReceived);
+        PacketTCP packetReceived = new PacketTCP(dataReceived);
 
 
-        PacketTCP thirdWay = handshake.thirdWay(dest_ip, remote_port, p);
+        PacketTCP thirdWay = handshake.thirdWay(dest_ip, remote_port, packetReceived);
         String dataHeaderThirdWay = thirdWay.toString();
         InterlayerData dataThirdWay = new InterlayerData(dataHeaderThirdWay.length());
 
@@ -82,14 +84,38 @@ public class TCP extends Transport implements IConstants {
 
         bubbleDown(dataThirdWay, dest_ip);
 
-        logger.debug("Conexao estabelecida!");
-
-        return new Connection(local_port, remote_port, dest_ip, dest_ip, this);
+        return new Connection(local_port, remote_port, source_ip, dest_ip, this);
     }
 
     @Override
+    @SuppressWarnings("empty-statement")
     public Connection listen(int local_port) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        
+        PacketTCP packetReceived;
+        ToReceiveMessage message = (ToReceiveMessage) container.get(0);
+
+        do {
+            while( (container.get(0) == null ));
+
+            String dataReceived = parseIntToString(message.data.data[0], NUM_BITS_HEADER);
+            
+            packetReceived = new PacketTCP(dataReceived);
+        } while( !packetReceived.getPortLocal().
+                equals(parseIntToString(local_port, NUM_BITS_MAX_PORT)) );
+
+        PacketTCP secondWay = handshake.secondWay(local_port,
+                parseStringToInt(packetReceived.getPortLocal()), packetReceived);
+        String dataHeaderSecondWay = secondWay.toString();
+        InterlayerData dataSecondWay = new InterlayerData(dataHeaderSecondWay.length());
+
+        dataSecondWay.data[0] = parseStringToInt(dataHeaderSecondWay);
+
+        bubbleDown(dataSecondWay, message.source_ip);
+        
+        logger.debug("Conexao estabelecida!");
+
+        return new Connection(local_port, parseStringToInt(packetReceived.getPortRemote()),
+                source_ip, message.source_ip, this);
     }
 
     @Override
