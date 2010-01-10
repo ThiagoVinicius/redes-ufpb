@@ -20,6 +20,10 @@ public class ThreeWaysHandshake implements IConstants {
        chooseSeqNumber();
     }
 
+    /**
+     * Ira' escolher randomicamente o numero de sequencia, sendo cada entidade
+     * possuindo um numero exclusivo.
+     */
     private void chooseSeqNumber() {
         Random random = new Random();
 
@@ -34,6 +38,13 @@ public class ThreeWaysHandshake implements IConstants {
         initialSequenceNumber_B = parseIntToString(num2, NUM_BITS_MAX_SEQNUMBER);
     }
 
+    /**
+     * Primeira via do handshake (pedido de conexao).
+     *
+     * @param portSrc Porta local em inteiro.
+     * @param portDst Porta remota em inteiro.
+     * @return Pacote configurado com numeros e flags do primeiro handshake.
+     */
     public PacketTCP firstWay( int portSrc, int portDst ) {
         
         String portLocal = parseIntToString(portSrc, NUM_BITS_MAX_PORT);
@@ -49,6 +60,14 @@ public class ThreeWaysHandshake implements IConstants {
         return packet;
     }
 
+    /**
+     * Segunda via do handshake (resposta).
+     *
+     * @param portSrc Porta local em inteiro.
+     * @param portDst Porta remota em inteiro.
+     * @param packetConnection Pacote recebido do transmissor.
+     * @return Pacote configurado com numeros e flags do segundo handshake.
+     */
     public PacketTCP secondWay( int portSrc, int portDst,
             PacketTCP packetConnection ) {
 
@@ -65,6 +84,12 @@ public class ThreeWaysHandshake implements IConstants {
         return packet;
     }
 
+    /**
+     * Terceira via do handshake (confirmacao).
+     *
+     * @param packetReply Pacote resposta do receptor.
+     * @return Pacote configurado com numeros e flags do terceiro handshake.
+     */
     public PacketTCP thirdWay( PacketTCP packetReply ) {
         PacketTCP packet = new PacketTCP( packetReply.getPortLocal(),
                 packetReply.getPortRemote(), "" );
@@ -77,6 +102,12 @@ public class ThreeWaysHandshake implements IConstants {
         return packet;
     }
 
+    /**
+     * Dado uma cadeia de string de 0s e 1s, ira' retornar um inteiro.
+     *
+     * @param value Cadeia de bits.
+     * @return Numero inteiro.
+     */
      private int parseStringToInt( String value ) {
 
          int valueInt = 0;
@@ -90,10 +121,25 @@ public class ThreeWaysHandshake implements IConstants {
          return valueInt;
      }
 
+     /**
+      * Transforma um numero inteiro para um string, especificando o numero de
+      * bits dessa cadeia, caso o valor seja maior que o numero de bits, ira'
+      * funcionar como um buffer circular.
+      *
+      * @param value Valor inteiro.
+      * @param numBit Numero de bits.
+      * @return Cadeira de bits em string
+      */
      private String parseIntToString( int value, int numBit ) {
 
-         if( value > (Math.pow(2, numBit)-1) ) {
+         /*
+         if ( value > (Math.pow(2, numBit)-1) ) {
              throw new IllegalArgumentException("O valor estoura o numero de bits!");
+         }
+         */
+         
+         while ( value > (Math.pow(2, numBit)-1) ) {
+             value = value - (int) (Math.pow(2, numBit));
          }
 
          String string = "";
