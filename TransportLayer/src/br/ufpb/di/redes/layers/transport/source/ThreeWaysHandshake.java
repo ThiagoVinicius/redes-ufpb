@@ -6,12 +6,16 @@
 package br.ufpb.di.redes.layers.transport.source;
 
 import java.util.Random;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Jailton
  */
 public class ThreeWaysHandshake implements IConstants {
+
+    private static final Logger logger = LoggerFactory.getLogger(ThreeWaysHandshake.class);
 
     private String initialSequenceNumber_A;
     private String initialSequenceNumber_B;
@@ -57,6 +61,8 @@ public class ThreeWaysHandshake implements IConstants {
         packet.setPortLocal(portLocal);
         packet.setPortRemote(portRemote);
 
+        logger.debug("Primeira via do handshake executada.");
+
         return packet;
     }
 
@@ -81,6 +87,8 @@ public class ThreeWaysHandshake implements IConstants {
         packet.setACKFlag("1");
         packet.setSYNFlag("1");
 
+        logger.debug("Segunda via do handshake executada.");
+
         return packet;
     }
 
@@ -98,6 +106,8 @@ public class ThreeWaysHandshake implements IConstants {
         int plus = parseStringToInt(packetReply.getSequenceNumber()) + 1;
         packet.setAckNumber( parseIntToString(plus, NUM_BITS_MAX_ACKNUMBER) );
         packet.setSYNFlag("0");
+
+        logger.debug("Terceira via do handshake executada.");
         
         return packet;
     }
