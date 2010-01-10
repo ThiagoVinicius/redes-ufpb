@@ -9,7 +9,7 @@ package br.ufpb.di.redes.layers.transport.source;
  *
  * @author Jailton
  */
-public class PacketTCP {
+public class PacketTCP implements IConstants {
 
     private String portLocal;
     private String portRemote;
@@ -27,7 +27,53 @@ public class PacketTCP {
     public PacketTCP(String portLocal, String portRemote, String data) {
         this.portLocal = portLocal;
         this.portRemote = portRemote;
+        this.sequenceNumber = "0000";
+        this.ackNumber = "1111";
+        this.windowSize = "0000";
+
+        this.ACK = "0";
+        this.RST = "0";
+        this.SYN = "0";
+        this.FIN = "0";
+
         this.data = data;
+    }
+
+    public PacketTCP(String stream) {
+        int initial = 0, last = NUM_BITS_MAX_PORT-1;
+        this.portLocal = stream.substring(initial, last);
+
+        initial = last+1; last = initial+NUM_BITS_MAX_PORT;
+        this.portRemote = stream.substring(initial, last);
+
+        initial = last+1; last = initial+NUM_BITS_MAX_SEQNUMBER;
+        this.sequenceNumber = stream.substring(initial, last);
+
+        initial = last+1; last = initial+NUM_BITS_MAX_ACKNUMBER;
+        this.ackNumber = stream.substring(initial, last);
+
+        initial = last+1; last = initial+NUM_BITS_MAX_WINDOW;
+        this.windowSize = stream.substring(initial, last);
+
+        initial = last+1; last = initial;
+        this.ACK = stream.substring(initial, last);
+
+        initial = last+1; last = initial;
+        this.RST = stream.substring(initial, last);
+
+        initial = last+1; last = initial;
+        this.SYN = stream.substring(initial, last);
+        
+        initial = last+1; last = initial;
+        this.FIN = stream.substring(initial, last);
+
+        if( last == (stream.length()-1) ) {
+            this.data = ""; 
+        }
+        else {
+            initial = last+1; last = stream.length()-1;
+            this.data = stream.substring(initial, last);
+        }
     }
 
     @Override

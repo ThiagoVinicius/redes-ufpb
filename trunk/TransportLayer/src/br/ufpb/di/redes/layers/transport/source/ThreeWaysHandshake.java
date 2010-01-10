@@ -98,9 +98,12 @@ public class ThreeWaysHandshake implements IConstants {
      * @param packetReply Pacote resposta do receptor.
      * @return Pacote configurado com numeros e flags do terceiro handshake.
      */
-    public PacketTCP thirdWay( PacketTCP packetReply ) {
-        PacketTCP packet = new PacketTCP( packetReply.getPortLocal(),
-                packetReply.getPortRemote(), "" );
+    public PacketTCP thirdWay( int portSrc, int portDst,
+            PacketTCP packetReply ) {
+
+        String portLocal = parseIntToString(portSrc, NUM_BITS_MAX_PORT);
+        String portRemote = parseIntToString(portDst, NUM_BITS_MAX_PORT);
+        PacketTCP packet = new PacketTCP( portLocal, portRemote, "" );
 
         packet.setSequenceNumber(packetReply.getAckNumber());
         int plus = parseStringToInt(packetReply.getSequenceNumber()) + 1;
