@@ -5,44 +5,73 @@
 
 package br.ufpb.di.redes.layers.transport.source;
 
+import java.util.Random;
+
 /**
  *
  * @author Jailton
  */
-public class ThreeWaysHandshake {
+public class ThreeWaysHandshake implements IConstants {
 
-    public PacketTCP firstWay( String portLocal, String portRemote ) {
+    private String initialSequenceNumber_A;
+    private String initialSequenceNumber_B;
+
+    public ThreeWaysHandshake() {
+       chooseSeqNumber();
+    }
+
+    private void chooseSeqNumber() {
+        Random random = new Random();
+
+        int num1 = random.nextInt( (int) Math.pow(2, NUM_BITS_MAX_SEQNUMBER) );
+        int num2 = random.nextInt( (int) Math.pow(2, NUM_BITS_MAX_SEQNUMBER) );
+
+        while(num1 == num2) {
+            num2 = random.nextInt( (int) Math.pow(2, NUM_BITS_MAX_SEQNUMBER) );
+        }
+
+        initialSequenceNumber_A = parseIntToString(num1, NUM_BITS_MAX_SEQNUMBER);
+        initialSequenceNumber_B = parseIntToString(num2, NUM_BITS_MAX_SEQNUMBER);
+    }
+
+    public PacketTCP firstWay( int portSrc, int portDst ) {
+        
+        String portLocal = parseIntToString(portSrc, NUM_BITS_MAX_PORT);
+        String portRemote = parseIntToString(portDst, NUM_BITS_MAX_PORT);
         PacketTCP packet = new PacketTCP( portLocal, portRemote, "" );
 
-        packet.setSequenceNumber( "001" );
-        packet.setACKFlag( "0" );
-        packet.setSYNFlag( "1" );
+        packet.setSequenceNumber( initialSequenceNumber_A );
+        packet.setACKFlag("0");
+        packet.setSYNFlag("1");
         packet.setPortLocal(portLocal);
         packet.setPortRemote(portRemote);
 
         return packet;
     }
 
-    public PacketTCP secondWay( PacketTCP packetConnection ) {
-        PacketTCP packet = new PacketTCP( packetConnection.getPortLocal(),
-                packetConnection.getPortRemote(), "" );
+    public PacketTCP secondWay( int portSrc, int portDst,
+            PacketTCP packetConnection ) {
 
-        packet.setSequenceNumber( "010" );
-        int plus = parseStringToInt(packetConnection.getSequenceNumber()) + 1;
-        packet.setAckNumber(parseIntToString(plus));
-        packet.setACKFlag( "1" );
-        packet.setSYNFlag( "1" );
+        String portLocal = parseIntToString(portSrc, NUM_BITS_MAX_PORT);
+        String portRemote = parseIntToString(portDst, NUM_BITS_MAX_PORT);
+        PacketTCP packet = new PacketTCP( portLocal, portRemote, "" );
+
+        packet.setSequenceNumber( initialSequenceNumber_B );
+        int plus = parseStringToInt( packetConnection.getSequenceNumber() ) + 1;
+        packet.setAckNumber( parseIntToString( plus, NUM_BITS_MAX_ACKNUMBER) );
+        packet.setACKFlag("1");
+        packet.setSYNFlag("1");
 
         return packet;
     }
 
-    public PacketTCP thirdWay( PacketTCP packetReply) {
+    public PacketTCP thirdWay( PacketTCP packetReply ) {
         PacketTCP packet = new PacketTCP( packetReply.getPortLocal(),
                 packetReply.getPortRemote(), "" );
 
         packet.setSequenceNumber(packetReply.getAckNumber());
         int plus = parseStringToInt(packetReply.getSequenceNumber()) + 1;
-        packet.setAckNumber(parseIntToString(plus));
+        packet.setAckNumber( parseIntToString(plus, NUM_BITS_MAX_ACKNUMBER) );
         packet.setSYNFlag("0");
         
         return packet;
@@ -50,32 +79,39 @@ public class ThreeWaysHandshake {
 
      private int parseStringToInt( String value ) {
 
-         if(value.equals("000")) return 0;
-         if(value.equals("001")) return 1;
-         if(value.equals("010")) return 2;
-         if(value.equals("011")) return 3;
-         if(value.equals("100")) return 4;
-         if(value.equals("101")) return 5;
-         if(value.equals("110")) return 6;
-         if(value.equals("111")) return 7;
+         int valueInt = 0;
+         int base = 1;
 
-         return 0;
+         for(int c = value.length()-1; c >= 0; c--) {
+             valueInt += (value.charAt(c)-'0') * base;
+             base *= 2;
+         }
+
+         return valueInt;
      }
 
-     private String parseIntToString( int value ){
+     private String parseIntToString( int value, int numBit ) {
 
-         switch(value){
-             case 0: return "000";
-             case 1: return "001";
-             case 2: return "010";
-             case 3: return "011";
-             case 4: return "100";
-             case 5: return "101";
-             case 6: return "110";
-             case 7: return "111";
-
-             default: return "000";
+         if( value > (Math.pow(2, numBit)-1) ) {
+             throw new IllegalArgumentException("O valor estoura o numero de bits!");
          }
+
+         String string = "";
+
+         while(value > 0 ) {
+            string = (value % 2) + string;
+            value /= 2;
+         }
+
+         if(string.length() < numBit) {
+             int addBit = numBit - string.length();
+
+             for(int c = 0; c < addBit; c++) {
+                string = "0" + string;
+             }
+         }
+
+         return string;
      }
 
 }
