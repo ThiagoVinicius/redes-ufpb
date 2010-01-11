@@ -86,7 +86,7 @@ public abstract class Transport extends Layer<NullLayer, Network> {
     public void received(InterlayerData data, int source_ip) {
         EntityState state = getState();
         if (state == EntityState.RUNNING) {
-            logger.debug("Dados recebidos de fisica. Para a fila!");
+            logger.debug("Dados recebidos da rede. Para a fila!");
             try {
                 ToReceiveMessage tmp = new ToReceiveMessage(data, source_ip);
                 receivedBuffer.put(tmp);
@@ -95,7 +95,7 @@ public abstract class Transport extends Layer<NullLayer, Network> {
                 Thread.currentThread().interrupt();
             }
         } else {
-            logger.warn("Dados recebidos de fisica, porem em estado invalido: {}.", state);
+            logger.warn("Dados recebidos da rede, porem em estado invalido: {}.", state);
             throw new IllegalStateException("Tentando repassar dados, mas " +
                     "a entidade esta em estado invalido: "+state.name());
         }
@@ -106,7 +106,7 @@ public abstract class Transport extends Layer<NullLayer, Network> {
      * @param data
      * @throws InterruptedException
      */
-    public void bubbleDown (InterlayerData data, int dest_ip) {
+    protected void bubbleDown (InterlayerData data, int dest_ip) {
         logger.debug("Repassando mensagem para a camada de rede.");
         downLayer.send(data, dest_ip);
     }
