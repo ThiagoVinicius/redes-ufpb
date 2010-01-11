@@ -22,17 +22,17 @@ public class CheaterNetwork extends Network {
     public int minpacketSize;
     public int maxpacketSize;
 
-    public int ip;
+    public int ip[];
 
     public Map<Integer, CheaterNetwork> others;
 
     private static final Logger logger = LoggerFactory.getLogger(CheaterDataLink.class);
 
-    public CheaterNetwork(DataLink downLayers[], int minpacketSize, int maxpacketSize, int ip, Map<Integer, CheaterNetwork> others) {
+    public CheaterNetwork(DataLink downLayers[], int minpacketSize, int maxpacketSize, int ipArray[], Map<Integer, CheaterNetwork> others) {
         super(downLayers);
         this.minpacketSize = minpacketSize;
         this.maxpacketSize = maxpacketSize;
-        this.ip = ip;
+        this.ip = ipArray;
         this.others = others;
     }
 
@@ -43,7 +43,7 @@ public class CheaterNetwork extends Network {
 
     @Override
     protected void processSentData(InterlayerData data, int destIp) {
-        others.get(destIp).fakeReceived(data, ip);
+        others.get(destIp).fakeReceived(data, ip[0]);
     }
 
     @Override
@@ -58,6 +58,11 @@ public class CheaterNetwork extends Network {
 
     public void fakeReceived (InterlayerData data, int souce_mac) {
         bubbleUp(data, souce_mac);
+    }
+
+    @Override
+    public int getIp() {
+        return ip[0];
     }
 
 }
