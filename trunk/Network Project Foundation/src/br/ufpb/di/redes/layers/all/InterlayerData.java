@@ -6,6 +6,7 @@
 package br.ufpb.di.redes.layers.all;
 
 import java.security.InvalidParameterException;
+import java.util.Arrays;
 
 /**
  * Esta classe esta aqui para abstrair um array de bits.
@@ -228,5 +229,55 @@ public class InterlayerData {
     public boolean getBit (int index) {
         return (data[index/32] & BIT_ARRAY[31 - index%32]) != 0;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final InterlayerData other = (InterlayerData) obj;
+        if (this.length != other.length) {
+            return false;
+        }
+
+        int rest = length % 32;
+        int last = data.length-1;
+
+        int mask = ~((1 << rest) - 1);
+
+        if (length > 0) {
+            data[last] &= mask;
+            other.data[last] &= mask;
+        }
+
+        if (!Arrays.equals(this.data, other.data)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+
+        int rest = length % 32;
+        int last = data.length-1;
+
+        int mask = ~((1 << rest) - 1);
+
+        if (length > 0) {
+            data[last] &= mask;
+        }
+
+        int hash = 3;
+        hash = 59 * hash + Arrays.hashCode(this.data);
+        hash = 59 * hash + this.length;
+        return hash;
+    }
+
+
 
 }

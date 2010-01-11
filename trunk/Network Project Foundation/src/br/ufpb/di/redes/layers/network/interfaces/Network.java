@@ -248,4 +248,12 @@ public abstract class Network extends Layer<Transport, DataLink> {
      */
     protected abstract void processReceivedData(InterlayerData data, int soruce_mac, int datalink_id);
 
+    /**
+     * Deve retornar o ip da maquina atual. No caso de um gateway, que tem mais
+     * de um ip, o mesmo ip deve sempre ser retornado.
+     *
+     * @return O ip desta maquina.
+     */
+    public abstract int getIp();
+
 }
