@@ -10,8 +10,12 @@ import br.ufpb.di.redes.layers.network.interfaces.Network;
 import br.ufpb.di.redes.layers.transport.interfaces.Connection;
 import br.ufpb.di.redes.layers.transport.interfaces.Transport;
 import br.ufpb.di.redes.layers.transport.interfaces.UnnableToConnectException;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,12 +25,22 @@ import org.slf4j.LoggerFactory;
  */
 public class CheaterTransport extends Transport {
 
-    public Set<Connection> connections;
+    public HashSet<Connection> connections;
+    public HashSet<Integer> availablePorts;
 
-    public CheaterTransport(Network downLayer, int minpacketSize, int maxpacketSize, int ip) {
+    public volatile AtomicBoolean listening;
+    public Semaphore listenSemaphore;
+
+    public CheaterTransport(Network downLayer, int minpacketSize, int maxpacketSize) {
         super(downLayer);
-        this.ip = ip;
+        this.ip = downLayer.getIp();
         connections = new HashSet<Connection>();
+        availablePorts = new HashSet<Integer>(Arrays.asList(new Integer [] {
+            8, 9, 10, 11, 12, 13, 14, 15
+        }));
+        listenSemaphore = new Semaphore(0);
+        listening = new AtomicBoolean(false);
+
     }
 
     public int ip;
@@ -50,7 +64,21 @@ public class CheaterTransport extends Transport {
 
     @Override
     public Connection connect(int dest_ip, int remote_port) throws UnnableToConnectException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int local_port = -1;
+        Iterator <Integer> iter = availablePorts.iterator();
+        while (iter.hasNext()) {
+            local_port = iter.next();
+            iter.remove();
+        }
+        if (local_port == -1) {
+            throw  new UnnableToConnectException();
+        }
+
+        Connection freshConnection = new Connection(local_port, remote_port, dest_ip, ip, this);
+
+        connections.add(freshConnection);
+
+        return freshConnection;
     }
 
     @Override
