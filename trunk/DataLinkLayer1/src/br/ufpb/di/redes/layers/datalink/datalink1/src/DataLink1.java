@@ -24,7 +24,7 @@ public class DataLink1 extends DataLink {
      * Valor do primeiro mac atribuido na rede, sera utilizado para definir
      * o enlace responsavel pela criacao do token.
      */
-    private static final int PRIMEIROMAC = 1; // 0 ?
+    private static final int PRIMEIROMAC = 0;
     
     /**
      * Quantidade de bits especificos para dados contidos em um quadro de dados.
@@ -68,7 +68,8 @@ public class DataLink1 extends DataLink {
 
     /**
      * Método para calcular o CRC de 4 bits a partir de dados com 12 bits
-     * de comprimento.
+     * de comprimento. Se a mensagem tiver mais de 12 bits, será avaliado o
+     * CRC dos 12 primeiros.
      * @param dados dados a partir dos quais será calculado o CRC.
      * @return valor do CRC.
      */
@@ -171,7 +172,16 @@ public class DataLink1 extends DataLink {
      * @return dados sem os campos inseridos pelo enlace.
      */
     private InterlayerData desenquadra (InterlayerData quadro) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (quadro.length != TAMQUADRODEDADOS) {
+            logger.warn("Recebido quadro de dados com tamanho errado.");
+            logger.warn("Não é possível desenquadrar.");
+            logger.warn("Retornando o quadro sem modificações.");
+            return quadro;
+        }
+        InterlayerData aux = new InterlayerData(BITSDADOS);
+        aux.putInfo(0, BITSDADOS, quadro.takeInfo(TAMCONTROLE, BITSDADOS));
+        
+        return aux;
     }
     
     /**
@@ -181,7 +191,19 @@ public class DataLink1 extends DataLink {
      * @return a mensagem original.
      */
     private InterlayerData recuperaMensagem (ArrayList<InterlayerData> msg) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (msg.size() == 0) {
+            logger.warn("Array vazio recebido para recuperação de mensagem.");
+            logger.warn("Retornando referência nula.");
+            return null;
+        }
+        InterlayerData aux = new InterlayerData(msg.size() * BITSDADOS);
+
+        for (int i = 0; i < msg.size(); i++) {
+            aux.putInfo(i*BITSDADOS, BITSDADOS,
+                    desenquadra(msg.get(i)).takeInfo(0, BITSDADOS));
+        }
+
+        return aux;
     }
 
     /**
@@ -190,7 +212,8 @@ public class DataLink1 extends DataLink {
      * @return valor booleano dizendo se o CRC está correto (true) ou não.
      */
     private boolean verificaCRC(InterlayerData quadro) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return calculaCRC4(quadro) ==
+                quadro.takeInfo(quadro.length - TAMCRC, TAMCRC);
     }
 
     @Override
