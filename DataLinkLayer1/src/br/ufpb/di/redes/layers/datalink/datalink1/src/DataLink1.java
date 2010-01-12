@@ -1,6 +1,28 @@
 /**
  * Implementacao da camada DataLink1.
  *
+ * Camada em arquitetura de Token Ring, que define 2 quadros:
+ * Quadro de Permissão e Endereçamento (Token) - será criado assim que a rede
+ * for iniciada por um dos enlaces (de mac 0) e é o responsável por definir
+ * quem poderá enviar mensagens, além de dar algumas informações importantes.
+ * Este tipo de quadro sempre possuirá controle no formato "01".
+ * O quadro possui 16 bits no seguinte formato: CCOOODDDXXbpcccc
+ *
+ * Quadro de Dados - criado sempre que algum enlace for enviar mensagem, pode
+ * ter 2 valores de controle: "10" para dados intermediários e "11" para um
+ * quadro de dados final.
+ * O quadro possui 16 bits no seguinte formato: CCddddddddXXcccc
+ *
+ * Legenda: C - bit de controle de quadro
+ *          O - endereço de origem
+ *          D - endereço de destino
+ *          X - bit de preenchimento
+ *          b - bit de dados (indica que os próximos quadros conterão dados)
+ *          p - bit de permissão
+ *          c - CRC
+ *          d - dados
+ *
+ *
  * @author Amanda Barreto Cavalcanti
  * @author Gutenberg Pessoa Botelho Neto
  */
