@@ -199,6 +199,10 @@ public class DataLink1 extends DataLink {
         InterlayerData aux = new InterlayerData(msg.size() * BITSDADOS);
 
         for (int i = 0; i < msg.size(); i++) {
+            if (!verificaCRC(msg.get(i))) {
+                logger.warn("Erro na verificação de CRC - mensagem perdida.");
+                return null;
+            }
             aux.putInfo(i*BITSDADOS, BITSDADOS,
                     desenquadra(msg.get(i)).takeInfo(0, BITSDADOS));
         }
