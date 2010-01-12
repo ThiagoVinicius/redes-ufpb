@@ -107,7 +107,7 @@ public class DataLink1 extends DataLink {
      * @param bitDePermissao diz se o token esta livre.
      * @return quadro contendo o controle (1), MAC de origem e destino,
      * bit de dados, bit de permissao e CRC.
-     */
+     */ 
     private InterlayerData criaQuadroDePermissaoEEnderecamento (int dest_mac,
                     int bitDeDados, int bitDePermissao) {
         InterlayerData aux = new InterlayerData(TAMQUADROPERMISSAOENDERECAMENTO);
