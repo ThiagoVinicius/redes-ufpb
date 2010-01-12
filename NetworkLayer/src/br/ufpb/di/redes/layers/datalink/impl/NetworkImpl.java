@@ -1,3 +1,5 @@
+package br.ufpb.di.redes.layers.datalink.impl;
+
 
 import br.ufpb.di.redes.layers.all.InterlayerData;
 import br.ufpb.di.redes.layers.datalink.interfaces.DataLink;
@@ -12,10 +14,10 @@ import br.ufpb.di.redes.layers.network.interfaces.Network;
  *
  * @author J. Marques
  */
-public class NetworkIMP extends Network {
+public class NetworkImpl extends Network {
     
     //Coloca o q vc precisar, como por exemplo o IP, no caso um arrays de IPs
-    public NetworkIMP(DataLink[] downLayers) {
+    public NetworkImpl(DataLink[] downLayers) {
         super(downLayers);
     }
 
@@ -39,5 +41,9 @@ public class NetworkIMP extends Network {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
+    public int getIp() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
 }
