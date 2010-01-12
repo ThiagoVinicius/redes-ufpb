@@ -96,6 +96,7 @@ public class DataLink1 extends DataLink {
      * @return valor do CRC.
      */
     private int calculaCRC4 (InterlayerData dados) {
+        int info = dados.takeInfo(0, 12);
         return 0; // só para testes, of course! =)
     }
 
@@ -111,13 +112,15 @@ public class DataLink1 extends DataLink {
         if (dados.length != BITSDADOS) {
             logger.warn("Recebido um quadro com tamanho errado.");
             logger.warn("Nao foi possivel criar o quadro de dados.");
-            logger.warn("Retornando um quadro vazio!");
-            return aux;
+            logger.warn("Retornando um quadro nulo!");
+            return null;
         }
  
         defineControle(controle, aux);
+        /** Armazena os dados no quadro */
         aux.putInfo(TAMCONTROLE, BITSDADOS, dados.takeInfo(0, BITSDADOS));
         int CRC = calculaCRC4(aux);
+        /** Armazena o CRC nos últimos bits do quadro */
         aux.putInfo(aux.length-TAMCRC, TAMCRC, CRC);
 
         return aux;
@@ -135,11 +138,15 @@ public class DataLink1 extends DataLink {
                     int bitDeDados, int bitDePermissao) {
         InterlayerData aux = new InterlayerData(TAMQUADROPERMISSAOENDERECAMENTO);
         defineControle(CTRLQUADROPERMISSAOEENDERECAMENTO, aux);
+        /** Armazena o MAC de origem no quadro */
         aux.putInfo(TAMCONTROLE, TAMMAC, mac);
+        /** Armazena o MAC de destino */
         aux.putInfo(TAMCONTROLE+TAMMAC, TAMMAC, dest_mac);
+        /** Armazena os bits de dados e permissão */
         aux.putInfo(aux.length-(TAMCRC+2), 1, bitDeDados);
         aux.putInfo(aux.length-(TAMCRC+1), 1, bitDePermissao);
         int CRC = calculaCRC4(aux);
+        /** Armazena o CRC nos últimos bits do quadro */
         aux.putInfo(aux.length-TAMCRC, TAMCRC, CRC);
 
         return aux;
@@ -162,10 +169,30 @@ public class DataLink1 extends DataLink {
             aux.putInfo(0, BITSDADOS, dados.takeInfo(i, BITSDADOS));
             aux = criaQuadroDeDados ((i + BITSDADOS < dados.length) ? 
                 CTRLQUADRODEDADOSINTERMEDIARIO : CTRLQUADRODEDADOSFINAL, aux);
+            
+            /**
+             * Se não for possível criar o quadro de dados, é retornada uma
+             * lista nula que, obviamente, não será enviada pela rede.
+             */
+            if (aux == null) {
+                return null;
+            }
             quadros.add(aux);
         }
 
         return quadros;
+    }
+
+    /**
+     * Método para criar o token inicial da rede.
+     * @return o token
+     */
+    private InterlayerData criaTokenInicial () {
+        /**
+         * O token inicial tem bit de dados 0 (pois ainda nao há mensagem
+         * a ser enviada) e bit de permissão 1 pois está livre
+         */
+        return criaQuadroDePermissaoEEnderecamento(PRIMEIROMAC, 0, 1);
     }
 
     /**
