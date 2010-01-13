@@ -212,6 +212,17 @@ public abstract class DataLink extends Layer<Network, Physical> {
         downLayer.send(data);
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+
+        sendThread.interrupt();
+        receivedThread.interrupt();
+
+        super.finalize();
+    }
+
+
+
     /**
      * Este metodo e' chamado automaticamente, pela thread de envio.
      * <p/>

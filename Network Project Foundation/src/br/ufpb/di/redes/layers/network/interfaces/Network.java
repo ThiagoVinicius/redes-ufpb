@@ -232,6 +232,15 @@ public abstract class Network extends Layer<Transport, DataLink> {
         downLayer[datalink_id].send(data, dest_mac);
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+
+        sendThread.interrupt();
+        receivedThread.interrupt();
+
+        super.finalize();
+    }
+
     /**
      * Este metodo e' chamado automaticamente, pela thread de envio.
      * <p/>
