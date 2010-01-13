@@ -50,20 +50,22 @@ public class NetworkImpl extends Network {
 
     @Override
     protected void processReceivedData(InterlayerData data, int soruce_mac, int datalink_id) {
-        //Se nao for nos, envia de volta pra o enlace
-        if(containsIp(data.takeInfo(4, 7))){
+
+        //Pega o IP destino e verifica se e o nosso IP, se nao for para nos repessa o pacote para o enlace
+        if(containsIp(data.takeInfo(NETWORK_LENGHT_OF_IP+STATION_LENGHT_OF_IP, 2*(NETWORK_LENGHT_OF_IP+STATION_LENGHT_OF_IP)-1))){
             bubbleDown(data, soruce_mac, datalink_id);
             return;
         }
         
-        //Se for para nos, 
-
+        //Se for para nos, cria um novo pacate para manda para camada de cima
         InterlayerData dataToTransport = new InterlayerData(data.length - HEADER_LENGHT);
 
-        int dataFromDataLink = data.takeInfo(HEADER_LENGHT, data.length-1);
-        dataToTransport.putInfo(0, dataToTransport.length, dataFromDataLink);
+        //Obs: Total de bits que ele vai ler: "data.length - HEADER_LENGHT', se for menor q zero ferrou
+        //Copia de bits
+        InterlayerData.copyBits(dataToTransport, data,(int)HEADER_LENGHT,data.length - HEADER_LENGHT,0);
 
-        int source_ip = data.takeInfo(0, 3);
+        //Obtem o ip
+        int source_ip = data.takeInfo(0, NETWORK_LENGHT_OF_IP+STATION_LENGHT_OF_IP-1);
         bubbleUp(dataToTransport, source_ip);//manda para cima
     }
 
@@ -75,12 +77,17 @@ public class NetworkImpl extends Network {
         //Coloca o endereco destino no arrays de bits que sera enviado para o enlace
         int source_ip = getIp(dest_ip);
 
-        dataToDataLink.putInfo(source_ip, 0, 4);//Adiciona o IP de origem
-        dataToDataLink.putInfo(dest_ip, 4, 4);//Adiciona o IP destino
+        //Versao antiga com erro
+        //dataToDataLink.putInfo(source_ip, 0, 4);//Adiciona o IP de origem
+        //dataToDataLink.putInfo(dest_ip, 4, 4);//Adiciona o IP destino
+        
+        //Adiciona os respectivos IPs origem e destino
+        dataToDataLink.putInfo(source_ip,0, NETWORK_LENGHT_OF_IP+STATION_LENGHT_OF_IP-1);
+        dataToDataLink.putInfo(dest_ip, NETWORK_LENGHT_OF_IP+STATION_LENGHT_OF_IP, 2*(NETWORK_LENGHT_OF_IP+STATION_LENGHT_OF_IP)-1);
 
-        int dataFromTransport = data.takeInfo(0, data.length-1);
-        dataToDataLink.putInfo(HEADER_LENGHT, data.length, dataFromTransport);//Adiciona os da camada de Transporte
-
+        //Copia dos bits
+        InterlayerData.copyBits(dataToDataLink,data,0,data.length,HEADER_LENGHT);
+        
         bubbleDown(dataToDataLink, getMac(dest_ip), getIdDataLink(source_ip));
     }
 
