@@ -62,7 +62,7 @@ public class TCP extends Transport implements IConstants {
         
         initialTime = System.currentTimeMillis();
 
-        while( container.get(0) == null ) {
+        while( container.size() == 0 ) {
             finalTime = System.currentTimeMillis();
             if( ( finalTime - initialTime ) > TIME_OUT_CONNECTION ) {
                 throw new UnnableToConnectException();
