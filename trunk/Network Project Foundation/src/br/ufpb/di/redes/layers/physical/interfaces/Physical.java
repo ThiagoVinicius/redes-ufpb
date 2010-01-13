@@ -113,7 +113,7 @@ public abstract class Physical extends Layer <DataLink, NullLayer> {
      * Esvazia o buffer e inicia a thread de recebimento de mensagens.
      */
     @Override
-    protected synchronized void start() {
+    public synchronized void start() {
         logger.info("Iniciando servico");
         downBuffer.clear();
         downThread = new Thread() {
