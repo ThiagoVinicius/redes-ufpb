@@ -92,10 +92,12 @@ public class TCP extends Transport implements IConstants {
     public Connection listen(int local_port) {
         
         PacketTCP packetReceived;
-        ToReceiveMessage message = (ToReceiveMessage) container.get(0);
+        ToReceiveMessage message = null;
 
         do {
-            while( (container.get(0) == null ));
+            while( (container.size() == 0 ));
+            
+            message = (ToReceiveMessage) container.get(0);
 
             String dataReceived = parseIntToString(message.data.data[0], NUM_BITS_HEADER);
             
