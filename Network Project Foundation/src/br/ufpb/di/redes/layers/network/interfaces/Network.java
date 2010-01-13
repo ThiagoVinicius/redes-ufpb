@@ -163,7 +163,7 @@ public abstract class Network extends Layer<Transport, DataLink> {
     public void send(InterlayerData data, int dest_ip) {
         EntityState state = getState();
         if (state == EntityState.RUNNING) {
-            logger.debug("Dados recebidos da rede. Para a fila!");
+            logger.debug("Dados recebidos do transporte. Para a fila!");
             try {
                 ToSendMessage tmp = new ToSendMessage(data, dest_ip);
                 sendBuffer.put(tmp);
@@ -172,7 +172,7 @@ public abstract class Network extends Layer<Transport, DataLink> {
                 Thread.currentThread().interrupt();
             }
         } else {
-            logger.warn("Dados recebidos da rede, porem em estado invalido: {}.", state);
+            logger.warn("Dados recebidos do transporte, porem em estado invalido: {}.", state);
             throw new IllegalStateException("Tentando repassar dados, mas " +
                     "a entidade esta em estado invalido: "+state.name());
         }
@@ -197,7 +197,7 @@ public abstract class Network extends Layer<Transport, DataLink> {
     public void received(InterlayerData data, int source_mac, int datalink_id) {
         EntityState state = getState();
         if (state == EntityState.RUNNING) {
-            logger.debug("Dados recebidos de fisica. Para a fila!");
+            logger.debug("Dados recebidos do enlace. Para a fila!");
             try {
                 ToReceiveMessage tmp = new ToReceiveMessage(data, source_mac, datalink_id);
                 receivedBuffer.put(tmp);
@@ -206,7 +206,7 @@ public abstract class Network extends Layer<Transport, DataLink> {
                 Thread.currentThread().interrupt();
             }
         } else {
-            logger.warn("Dados recebidos de fisica, porem em estado invalido: {}.", state);
+            logger.warn("Dados recebidos do enlace, porem em estado invalido: {}.", state);
             throw new IllegalStateException("Tentando repassar dados, mas " +
                     "a entidade esta em estado invalido: "+state.name());
         }
