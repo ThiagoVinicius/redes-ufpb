@@ -127,15 +127,13 @@ public class InterlayerData {
         if (len > 32 || len < 0)
             throw new InvalidParameterException();
 
-        infoToPut = infoToPut << (32-len);
-
-        for (int i = 0; i < len; ++i) {
-            if ((infoToPut & 0x80000000) != 0)
-                setBit(start+i);
+        for (int i = start+len-1; i >= start; --i) {
+            if ((infoToPut & 0x01) != 0)
+                setBit(i);
             else
-                clearBit(start+i);
+                clearBit(i);
 
-            infoToPut = infoToPut << 1;
+            infoToPut = infoToPut >>> 1;
         }
 
     }
@@ -155,6 +153,51 @@ public class InterlayerData {
         return result;
 
     }
+
+    /**
+     * Copia <code>len</code> bits de <code>src</code> a <code>dest</code>,
+     * lendo a partir de <code>offset</code>, em <code>src</code>, e comecando
+     * a escrita na posicao <code>start</code>, em <code>dest</code>
+     *
+     * @param dest destino dos bits
+     * @param src origem dos bits
+     * @param offset posicao inicial da leitura dos bits
+     * @param len quantidade de bits a serem copiados
+     * @param start posicao inicial de escrita dos bits.
+     */
+    public static void copyBits (
+            InterlayerData dest,
+            InterlayerData src,
+            int offset,
+            int len,
+            int start) {
+
+        if (offset < 0) {
+            throw new ArrayIndexOutOfBoundsException("offset nao pode ser negativo");
+        }
+        if (len < 0) {
+            throw new ArrayIndexOutOfBoundsException("len nao pode ser negativo");
+        }
+        if (start < 0) {
+            throw new ArrayIndexOutOfBoundsException("start nao pode ser negativo");
+        }
+        if (offset + len > src.length) {
+            throw new ArrayIndexOutOfBoundsException("offset + len maior que src.length");
+        }
+        if (start + len > dest.length) {
+            throw new ArrayIndexOutOfBoundsException("start + len maior que dest.length");
+        }
+
+
+        for (int i = 0; i < len; ++i) {
+            if (src.getBit(i+offset) == true) {
+                dest.setBit(i+start);
+            } else {
+                dest.clearBit(i+start);
+            }
+        }
+
+    };
 
 
     /**
@@ -276,6 +319,35 @@ public class InterlayerData {
         hash = 59 * hash + Arrays.hashCode(this.data);
         hash = 59 * hash + this.length;
         return hash;
+    }
+
+    private static final String decToBin (int dec, int size) {
+        if (size == 0)
+            size = 32;
+
+        long theOrMask = 1L << size;
+        long theAndMask = theOrMask - 1L;
+        long newDec = (dec & theAndMask) | theOrMask;
+
+        String result = Long.toBinaryString(newDec);
+        return result.substring(1);
+    }
+
+    @Override
+    public String toString () {
+        StringBuilder buf = new StringBuilder(length + length/8);
+
+        for (int i = 0; i < data.length - 1; ++i) {
+            buf.append(decToBin(data[i], 32));
+        }
+        if (data.length > 0)
+            buf.append(decToBin(data[data.length-1] >>> (32 - length%32), length%32));
+
+        for (int i = (length/8)*8; i > 0; i -= 8) {
+            buf.insert(i, " ");
+        }
+
+        return buf.toString().trim();
     }
 
 
