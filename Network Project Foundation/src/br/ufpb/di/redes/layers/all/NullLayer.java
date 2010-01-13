@@ -27,7 +27,7 @@ public final class NullLayer extends Layer {
     }
 
     @Override
-    protected void start() {
+    public void start() {
     }
 
     @Override

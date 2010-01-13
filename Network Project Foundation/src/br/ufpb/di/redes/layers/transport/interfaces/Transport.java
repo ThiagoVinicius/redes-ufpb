@@ -45,11 +45,13 @@ public abstract class Transport extends Layer<NullLayer, Network> {
     public Transport(Network downLayer) {
         super(downLayer);
         receivedBuffer = new ArrayBlockingQueue<ToReceiveMessage>(receivedBufferSize);
+        attach(new NullLayer());
     }
 
     @Override
-    protected void start() {
+    public void start() {
         super.start();
+        logger.info("Iniciando servico");
         receivedBuffer.clear();
         receivedThread = new Thread() {
             @Override

@@ -130,7 +130,7 @@ public abstract class Layer <U extends Layer, D extends Layer> implements Joint<
      * <p/>
      * Este metodo so sera chamado uma unica vez.
      */
-    protected void start () {
+    public void start () {
     }
 
     /**
