@@ -1,0 +1,24 @@
+INFO  [Transporte] - Iniciando servico
+INFO  [Transporte] - Iniciando servico
+INFO  [Transporte] - Iniciando servico
+INFO  [Transporte] - Iniciando servico
+INFO  [Transporte] - Iniciando servico
+INFO  [Transporte] - Iniciando servico
+INFO  [Transporte] - Iniciando servico
+INFO  [Transporte] - Iniciando servico
+INFO  [Transporte] - Iniciando servico
+INFO  [Transporte] - Iniciando servico
+INFO  [Transporte] - Iniciando servico
+INFO  [Transporte] - Iniciando servico
+DEBUG [Transporte] - Primeira via do handshake executada.
+DEBUG [Transporte] - Repassando mensagem para a camada de rede.
+WARN  [Transporte] - Dados recebidos da rede, porem em estado invalido: HANGING.
+INFO  [Transporte] - Iniciando servico
+INFO  [Transporte] - Iniciando servico
+INFO  [Transporte] - Iniciando servico
+INFO  [Transporte] - Iniciando servico
+INFO  [Transporte] - Iniciando servico
+INFO  [Transporte] - Iniciando servico
+DEBUG [Transporte] - Primeira via do handshake executada.
+DEBUG [Transporte] - Repassando mensagem para a camada de rede.
+DEBUG [Transporte] - Dados recebidos da rede. Para a fila!

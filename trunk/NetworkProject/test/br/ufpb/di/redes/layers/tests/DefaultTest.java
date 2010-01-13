@@ -13,16 +13,30 @@ import br.ufpb.di.redes.layers.physical.interfaces.Physical;
 import br.ufpb.di.redes.layers.physical.test.CheaterPhysicalLayer;
 import br.ufpb.di.redes.layers.transport.interfaces.Transport;
 import br.ufpb.di.redes.layers.transport.test.CheaterTransport;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import junit.framework.TestCase;
 
 /**
  *
  * @author Thiago
  */
-public class TransportTest extends TestCase {
+public class DefaultTest extends TestCase {
+
+    static {
+        try {
+            File f = new File("log4j.properties");
+            System.setProperty("log4j.configuration", f.toURI().toURL().toString());
+        } catch (MalformedURLException ex) {
+        }
+    }
 
     public void setUp() throws IOException {
 
@@ -30,16 +44,22 @@ public class TransportTest extends TestCase {
         config.load(new FileInputStream("topology.properties"));
 
         Machine machines[] = new Machine[new Integer(config.getProperty("machine.count"))];
-        SubNetwork networks[] = new SubNetwork[new Integer(config.getProperty("network.count"))];
+        Ring networks[] = new Ring[new Integer(config.getProperty("network.count"))];
+
+        interNetwork = new InterNetwork();
+        interNetwork.allMachines = machines;
+        interNetwork.networks = networks;
 
         initMachines(machines, config);
         initSubnetworks(networks, machines, config);
 
         configureCheaterPhysicals(machines, config);
+        configureCheaterDataLinks(networks, machines, config);
+        configureCheaterNetworks(machines);
 
-        interNetwork = new InterNetwork();
-        interNetwork.allMachines = machines;
-        interNetwork.networks = networks;
+        for (Machine i : machines) {
+            i.doStarts();
+        }
 
     }
 
@@ -83,8 +103,8 @@ public class TransportTest extends TestCase {
         int ipArray[] = new int[count];
 
         for (int i = 0; i < count; ++i) {
-            String currentNetworkPrefix = networkPrefix+(i+1)+".";
-            ipArray[i] = new Integer(topology.getProperty(currentNetworkPrefix+"ip"));
+//            String currentNetworkPrefix = networkPrefix+(i+1)+".";
+            ipArray[i] = new Integer(topology.getProperty(networkPrefix+"ip."+(i+1)));
         }
 
         machine.network = getNetworkLayer(machineId, machine.datalink, ipArray);
@@ -95,9 +115,9 @@ public class TransportTest extends TestCase {
         machine.transport = getTransportLayer(machineId, machine.network);
     }
 
-    private void initSubnetworks(SubNetwork[] networks, Machine allMachines[], Properties config) {
+    private void initSubnetworks(Ring[] networks, Machine allMachines[], Properties config) {
         for (int i = 0; i < networks.length; ++i) {
-            networks[i] = new SubNetwork();
+            networks[i] = new Ring();
             String rawMachines = config.getProperty("network."+(i+1)+".machines");
             String splitMachines[] = rawMachines.split(",");
             
@@ -108,6 +128,7 @@ public class TransportTest extends TestCase {
             }
 
             networks[i].machines = machines;
+//            networks[i].machineToDataLink = new int[machines.length];
         }
     }
 
@@ -119,11 +140,11 @@ public class TransportTest extends TestCase {
 
                 if (curPhysical instanceof CheaterPhysicalLayer) {
                     CheaterPhysicalLayer asCheater = (CheaterPhysicalLayer) curPhysical;
-                    String out = config.getProperty("machine."+(i+1)+".datalink."+(j+i)+".out");
-                    String splitOut[] = out.split(".");
+                    String out = config.getProperty("machine."+(i+1)+".datalink."+(j+1)+".out");
+                    String splitOut[] = out.split("[.]");
 
-                    int outMachine = new Integer(splitOut[0]);
-                    int outPhysical = new Integer(splitOut[1]);
+                    int outMachine = new Integer(splitOut[0]) - 1;
+                    int outPhysical = new Integer(splitOut[1]) - 1;
 
                     asCheater.forward = machines[outMachine].physical[outPhysical];
                     
@@ -132,27 +153,78 @@ public class TransportTest extends TestCase {
         }
     }
 
-    public InterNetwork interNetwork;
+    private void configureCheaterDataLinks(
+            Ring globalRings[],
+            Machine machines[],
+            Properties config) {
 
-    public void testListenConnect() {
+        int ringcount = new Integer(config.getProperty("ring.count"));
+
+        for (int i = 0; i < ringcount; ++i) {
+            String rawRingInfo = config.getProperty("ring."+(i+1));
+            String splitRingInfo[] = rawRingInfo.split("[,]");
 
 
+            Map<Integer, CheaterDataLink> sv_cheats = //just kidding
+                    new HashMap<Integer, CheaterDataLink> ();
+
+            for (String curDataLink : splitRingInfo) {
+                String splitCurDataLink[] = curDataLink.split("[.]");
+                int targetmachine = (new Integer(splitCurDataLink[0])) - 1;
+                int targetdatalink = (new Integer(splitCurDataLink[1])) - 1;
+
+//                globalRings[i].machineToDataLink[targetmachine] = targetdatalink;
+                DataLink target = machines[targetmachine].datalink[targetdatalink];
+
+
+                if (target instanceof CheaterDataLink) {
+                    CheaterDataLink asCheater = (CheaterDataLink) target;
+
+                    asCheater.others = sv_cheats;
+                    sv_cheats.put(asCheater.mac, asCheater);
+
+                }
+
+            }
+
+        }
 
     }
 
-    private CheaterPhysicalLayer getPhysicalLayer(int id) {
+    private void configureCheaterNetworks(Machine[] machines) {
+
+        Map<Integer, CheaterNetwork> theNetwork = new HashMap<Integer, CheaterNetwork>();
+
+        for (Machine curMachine : machines) {
+            Network curNetwork = curMachine.network;
+            if (curNetwork instanceof CheaterNetwork) {
+
+                CheaterNetwork asCheater = (CheaterNetwork) curNetwork;
+                asCheater.others = theNetwork;
+                for (int curIp : asCheater.ip) {
+                    theNetwork.put(curIp, asCheater);
+                }
+            }
+
+        }
+
+    }
+
+    public InterNetwork interNetwork;
+
+    public CheaterPhysicalLayer getPhysicalLayer(int id) {
         return new CheaterPhysicalLayer(16, 16, null);
     }
 
-    private DataLink getDataLinkLayer(int machineId, int id, Physical downLayer, int mac) {
+    public DataLink getDataLinkLayer(int machineId, int id, Physical downLayer, int mac) {
         return new CheaterDataLink(downLayer, id, 10, 50, null, mac);
     }
 
-    private Network getNetworkLayer(int machineId, DataLink[] datalink, int[] ipArray) {
+    public Network getNetworkLayer(int machineId, DataLink[] datalink, int[] ipArray) {
         return new CheaterNetwork(datalink, 10, 50, ipArray, null);
     }
 
-    private Transport getTransportLayer(int machineId, Network downLayer) {
+    public Transport getTransportLayer(int machineId, Network downLayer) {
         return new CheaterTransport(downLayer, 10, 50);
     }
 

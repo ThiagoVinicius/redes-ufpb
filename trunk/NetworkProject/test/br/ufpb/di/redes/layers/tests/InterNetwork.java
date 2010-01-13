@@ -11,7 +11,7 @@ package br.ufpb.di.redes.layers.tests;
  */
 public class InterNetwork {
 
-    public SubNetwork networks[];
+    public Ring networks[];
     public Machine allMachines[];
 
 }

@@ -35,4 +35,19 @@ public class Machine {
 
     }
 
+    public void doStarts() {
+        for (int i = 0; i < physical.length; ++i) {
+            physical[i].start();
+        }
+
+        for (int i = 0; i < datalink.length; ++i) {
+            datalink[i].start();
+        }
+
+        network.start();
+
+        transport.start();
+
+    }
+
 }
