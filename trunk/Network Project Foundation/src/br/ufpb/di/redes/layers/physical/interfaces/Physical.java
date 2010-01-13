@@ -101,6 +101,14 @@ public abstract class Physical extends Layer <DataLink, NullLayer> {
         upLayer.received(data);
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+
+        downThread.interrupt();
+
+        super.finalize();
+    }
+
     /**
      * Este metodo e' chamado automaticamente, pela thread de recebimento.
      * <p/>

@@ -132,6 +132,14 @@ public abstract class Transport extends Layer<NullLayer, Network> {
     public abstract Connection connect(int dest_ip, int remote_port)
             throws UnnableToConnectException;
 
+    @Override
+    protected void finalize() throws Throwable {
+
+        receivedThread.interrupt();
+
+        super.finalize();
+    }
+
     /**
      * Aguarda conexao com o cliente remoto.
      *
