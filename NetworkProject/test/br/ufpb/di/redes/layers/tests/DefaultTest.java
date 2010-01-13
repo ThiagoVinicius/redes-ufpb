@@ -63,6 +63,11 @@ public class DefaultTest extends TestCase {
 
     }
 
+    public void tearDown() throws Exception {
+        interNetwork.allMachines = null;
+        interNetwork.networks = null;
+    }
+
     private void initMachines(Machine machines[], Properties topology) {
         for (int i = 0; i < machines.length; ++i) {
             machines[i] = new Machine();
