@@ -292,7 +292,7 @@ public class DataLink1 extends DataLink {
         super.start();
 
         logger.info("Enlace de MAC " + mac + " iniciado. Enviando token.");
-        bubbleDown(criaTokenInicial());
+        if (mac == PRIMEIROMAC) bubbleDown(criaTokenInicial());
     }
 
     @Override
