@@ -86,6 +86,7 @@ public class DataLink1 extends DataLink {
     public DataLink1 (Physical downLayer, int id, int mac) {
         super(downLayer, id);
         this.mac = mac;
+        logger.info("Enlace criado com id " + id + " e MAC " + mac + ".");
     }
 
     /**
@@ -115,6 +116,8 @@ public class DataLink1 extends DataLink {
             logger.warn("Retornando um quadro nulo!");
             return null;
         }
+
+        logger.info("Criando quadro de dados com controle " + controle + ".");
  
         defineControle(controle, aux);
         /** Armazena os dados no quadro */
@@ -136,6 +139,10 @@ public class DataLink1 extends DataLink {
      */ 
     private InterlayerData criaQuadroDePermissaoEEnderecamento (int dest_mac,
                     int bitDeDados, int bitDePermissao) {
+        logger.info("Criando token com:");
+        logger.info("\tMAC de Destino: " + dest_mac);
+        logger.info("\tBit de Dados: " + bitDeDados);
+        logger.info("\tBit de Permissão: " + bitDePermissao);
         InterlayerData aux = new InterlayerData(TAMQUADROPERMISSAOENDERECAMENTO);
         defineControle(CTRLQUADROPERMISSAOEENDERECAMENTO, aux);
         /** Armazena o MAC de origem no quadro */
@@ -162,8 +169,14 @@ public class DataLink1 extends DataLink {
      * @return ArrayList contendo todos os quadros criados por este método.
      */
     private ArrayList<InterlayerData> criaQuadrosDeDados (InterlayerData dados) {
+        if (dados.length < BITSDADOS) {
+            logger.warn("Mensagem recebida com tamanho muito pequeno.");
+            logger.warn("Não será possível criar os quadros, retornando nulo");
+            return null;
+        }
         ArrayList<InterlayerData> quadros = new ArrayList<InterlayerData>();
         InterlayerData aux;
+        logger.info("Encapsulando mensagem de tamanho " + dados.length);
         for (int i = 0; i < dados.length; i += BITSDADOS) {
             aux = new InterlayerData (BITSDADOS);
             aux.putInfo(0, BITSDADOS, dados.takeInfo(i, BITSDADOS));
@@ -180,6 +193,7 @@ public class DataLink1 extends DataLink {
             quadros.add(aux);
         }
 
+        logger.info("Retornando " + quadros.size() + " quadros de dados.");
         return quadros;
     }
 
@@ -247,6 +261,8 @@ public class DataLink1 extends DataLink {
         }
         InterlayerData aux = new InterlayerData(msg.size() * BITSDADOS);
 
+        logger.info("Recuperando mensagem...");
+
         for (int i = 0; i < msg.size(); i++) {
             if (!verificaCRC(msg.get(i))) {
                 logger.warn("Erro na verificação de CRC - mensagem perdida.");
@@ -255,6 +271,8 @@ public class DataLink1 extends DataLink {
             aux.putInfo(i*BITSDADOS, BITSDADOS,
                     desenquadra(msg.get(i)).takeInfo(0, BITSDADOS));
         }
+
+        logger.info("Mensagem recuperada com tamanho " + aux.length);
 
         return aux;
     }
@@ -267,6 +285,14 @@ public class DataLink1 extends DataLink {
     private boolean verificaCRC(InterlayerData quadro) {
         return calculaCRC4(quadro) ==
                 quadro.takeInfo(quadro.length - TAMCRC, TAMCRC);
+    }
+
+    @Override
+    public void start() {
+        super.start();
+
+        logger.info("Enlace de MAC " + mac + " iniciado. Enviando token.");
+        bubbleDown(criaTokenInicial());
     }
 
     @Override
