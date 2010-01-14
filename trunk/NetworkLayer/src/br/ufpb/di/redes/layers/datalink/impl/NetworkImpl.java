@@ -22,6 +22,7 @@ public class NetworkImpl extends Network {
     public static final byte HEADER_LENGHT = 8;//Tamanho do cabecalho usado para redimensionar o rray
     public static final byte NETWORK_LENGHT_OF_IP = 2;
     public static final byte STATION_LENGHT_OF_IP = 2;
+    public static final byte NETWORK_FULL_ADRESS_SIZE=NETWORK_LENGHT_OF_IP+STATION_LENGHT_OF_IP;//Tamanho completo do ip
 
     /**
      * Chave - IP de destino
@@ -52,7 +53,8 @@ public class NetworkImpl extends Network {
     protected void processReceivedData(InterlayerData data, int soruce_mac, int datalink_id) {
 
         //Pega o IP destino e verifica se e o nosso IP, se nao for para nos repessa o pacote para o enlace
-        if(containsIp(data.takeInfo(NETWORK_LENGHT_OF_IP+STATION_LENGHT_OF_IP, 2*(NETWORK_LENGHT_OF_IP+STATION_LENGHT_OF_IP)-1))){
+        if(containsIp(data.takeInfo(NETWORK_FULL_ADRESS_SIZE, NETWORK_FULL_ADRESS_SIZE))){
+            //Obs: Errado source_mac manda de volta para quem enviou,
             bubbleDown(data, soruce_mac, datalink_id);
             return;
         }
@@ -65,7 +67,7 @@ public class NetworkImpl extends Network {
         InterlayerData.copyBits(dataToTransport, data,(int)HEADER_LENGHT,data.length - HEADER_LENGHT,0);
 
         //Obtem o ip
-        int source_ip = data.takeInfo(0, NETWORK_LENGHT_OF_IP+STATION_LENGHT_OF_IP-1);
+        int source_ip = data.takeInfo(0, NETWORK_FULL_ADRESS_SIZE);
         bubbleUp(dataToTransport, source_ip);//manda para cima
     }
 
@@ -76,14 +78,10 @@ public class NetworkImpl extends Network {
 
         //Coloca o endereco destino no arrays de bits que sera enviado para o enlace
         int source_ip = getIp(dest_ip);
-
-        //Versao antiga com erro
-        //dataToDataLink.putInfo(source_ip, 0, 4);//Adiciona o IP de origem
-        //dataToDataLink.putInfo(dest_ip, 4, 4);//Adiciona o IP destino
         
         //Adiciona os respectivos IPs origem e destino
-        dataToDataLink.putInfo(source_ip,0, NETWORK_LENGHT_OF_IP+STATION_LENGHT_OF_IP-1);
-        dataToDataLink.putInfo(dest_ip, NETWORK_LENGHT_OF_IP+STATION_LENGHT_OF_IP, 2*(NETWORK_LENGHT_OF_IP+STATION_LENGHT_OF_IP)-1);
+        dataToDataLink.putInfo(0,NETWORK_FULL_ADRESS_SIZE,source_ip);
+        dataToDataLink.putInfo(NETWORK_FULL_ADRESS_SIZE,NETWORK_FULL_ADRESS_SIZE,dest_ip);
 
         //Copia dos bits
         InterlayerData.copyBits(dataToDataLink,data,0,data.length,HEADER_LENGHT);
@@ -119,14 +117,14 @@ public class NetworkImpl extends Network {
         
         InterlayerData network_dest_ip = new InterlayerData(NETWORK_LENGHT_OF_IP);
         network_dest_ip.putInfo(0, NETWORK_LENGHT_OF_IP, dest_ip);
-        int dest_network = network_dest_ip.takeInfo(0, network_dest_ip.length);
+        int dest_network = network_dest_ip.takeInfo(0, NETWORK_LENGHT_OF_IP);
 
         InterlayerData network_source_ip = new InterlayerData(NETWORK_LENGHT_OF_IP);
 
         for(int ip: source_ips){
 
             network_source_ip.putInfo(0, NETWORK_LENGHT_OF_IP, ip);
-            int source_network = network_source_ip.takeInfo(0, network_source_ip.length);
+            int source_network = network_source_ip.takeInfo(0, NETWORK_LENGHT_OF_IP);
             if(source_network == dest_network)
                 return ip;
         }
