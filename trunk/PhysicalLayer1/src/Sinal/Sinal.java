@@ -6,7 +6,7 @@ package Sinal;
  * Created on May 31, 2009, 10:14 PM
  *
  * Classe responsavel pela criacaoo e manipulacao dos sinais gerados pela camada fisica.
- * @author Lucas Gambarra
+ * 
  */
 public class Sinal {
 

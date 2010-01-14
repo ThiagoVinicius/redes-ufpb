@@ -12,10 +12,7 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.TargetDataLine;
 
-/**
- *
- * @author lucas
- */
+
 public class Som {
 
     public static SourceDataLine openLineToWrite(float sampleRate, int sampleSizeInBits,
