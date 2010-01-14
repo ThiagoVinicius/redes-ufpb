@@ -40,38 +40,38 @@ public class PacketTCP implements IConstants {
     }
 
     public PacketTCP(String stream) {
-        int initial = 0, last = NUM_BITS_MAX_PORT-1;
+        int initial = 0, last = NUM_BITS_MAX_PORT;
         this.portLocal = stream.substring(initial, last);
 
-        initial = last+1; last = initial+NUM_BITS_MAX_PORT;
+        initial = last; last = initial+NUM_BITS_MAX_PORT;
         this.portRemote = stream.substring(initial, last);
 
-        initial = last+1; last = initial+NUM_BITS_MAX_SEQNUMBER;
+        initial = last; last = initial+NUM_BITS_MAX_SEQNUMBER;
         this.sequenceNumber = stream.substring(initial, last);
 
-        initial = last+1; last = initial+NUM_BITS_MAX_ACKNUMBER;
+        initial = last; last = initial+NUM_BITS_MAX_ACKNUMBER;
         this.ackNumber = stream.substring(initial, last);
 
-        initial = last+1; last = initial+NUM_BITS_MAX_WINDOW;
+        initial = last; last = initial+NUM_BITS_MAX_WINDOW;
         this.windowSize = stream.substring(initial, last);
 
-        initial = last+1; last = initial;
+        initial = last; last = initial+1;
         this.ACK = stream.substring(initial, last);
 
-        initial = last+1; last = initial;
+        initial = last; last = initial+1;
         this.RST = stream.substring(initial, last);
 
-        initial = last+1; last = initial;
+        initial = last; last = initial+1;
         this.SYN = stream.substring(initial, last);
         
-        initial = last+1; last = initial;
+        initial = last; last = initial+1;
         this.FIN = stream.substring(initial, last);
 
-        if( last == (stream.length()-1) ) {
+        if( last == (stream.length()) ) {
             this.data = ""; 
         }
         else {
-            initial = last+1; last = stream.length()-1;
+            initial = last; last = stream.length();
             this.data = stream.substring(initial, last);
         }
     }
