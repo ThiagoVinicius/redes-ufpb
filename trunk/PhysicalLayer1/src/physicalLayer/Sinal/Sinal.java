@@ -6,6 +6,8 @@ package physicalLayer.Sinal;
  * Created on May 31, 2009, 10:14 PM
  *
  * Classe responsavel pela criacaoo e manipulacao dos sinais gerados pela camada fisica.
+ *
+ * @author Janduy e Hugo
  * 
  */
 public class Sinal {
@@ -89,11 +91,7 @@ public class Sinal {
         }
     }
 
-    /********
-     * Obs.: Nos dois metodos que se sucedem pode haver um melhoramento na
-     * frequencia ou a criacao de mais de dois niveis de intensidades(transmitir
-     * dois bits de ma vez ), o que iria melhorar a taxa de transferencia.
-     *************/
+    
     /****
      *
      * escreveZero():  escreve um "bit zero" nao onda
