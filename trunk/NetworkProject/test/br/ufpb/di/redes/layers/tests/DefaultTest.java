@@ -132,7 +132,7 @@ public class DefaultTest extends TestCase {
                 machines[j] = allMachines[(new Integer(splitMachines[j])) - 1];
             }
 
-            networks[i].machines = machines;
+//            networks[i].machines = machines;
 //            networks[i].machineToDataLink = new int[machines.length];
         }
     }
@@ -173,6 +173,7 @@ public class DefaultTest extends TestCase {
             Map<Integer, CheaterDataLink> sv_cheats = //just kidding
                     new HashMap<Integer, CheaterDataLink> ();
 
+            int j = 0;
             for (String curDataLink : splitRingInfo) {
                 String splitCurDataLink[] = curDataLink.split("[.]");
                 int targetmachine = (new Integer(splitCurDataLink[0])) - 1;
@@ -180,6 +181,7 @@ public class DefaultTest extends TestCase {
 
 //                globalRings[i].machineToDataLink[targetmachine] = targetdatalink;
                 DataLink target = machines[targetmachine].datalink[targetdatalink];
+                globalRings[i].datalinks[j] = target;
 
 
                 if (target instanceof CheaterDataLink) {
@@ -189,6 +191,8 @@ public class DefaultTest extends TestCase {
                     sv_cheats.put(asCheater.mac, asCheater);
 
                 }
+
+                ++j;
 
             }
 

@@ -13,7 +13,8 @@ import br.ufpb.di.redes.layers.datalink.interfaces.DataLink;
  */
 public class Ring {
 
-    public Machine machines[];
+    public DataLink datalinks[];
+    public int macs[];
 
 //    public int machineToDataLink[];
 //
