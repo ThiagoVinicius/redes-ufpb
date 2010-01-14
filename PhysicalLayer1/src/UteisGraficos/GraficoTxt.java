@@ -8,10 +8,7 @@ import Sinal.Sinal;
 import java.io.File;
 import java.io.FileWriter;
 
-/**
- *
- * @author lucas
- */
+
 public class GraficoTxt {
 
     public static void escreveOndaTxt(byte onda[], String arquivo) {

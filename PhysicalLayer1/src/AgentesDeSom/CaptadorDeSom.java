@@ -9,14 +9,7 @@ import UteisGraficos.GraficoTxt;
 import UteisSom.Som;
 import javax.sound.sampled.TargetDataLine;
 
-/**
- *
- * @author lucas
- */
-/**
- *
- * @author lucas
- */
+
 public class CaptadorDeSom{
 
     TargetDataLine linha = null;/*Linha por onde o sinal e lido da caixa de som*/

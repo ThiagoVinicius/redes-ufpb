@@ -13,10 +13,7 @@ import br.ufpb.di.redes.layers.physical.interfaces.Physical;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author lucas
- */
+
 public class Fisica extends Physical{
 
     TransmissorDeSom transmite = new TransmissorDeSom();
