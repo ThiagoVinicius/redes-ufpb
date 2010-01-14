@@ -8,9 +8,13 @@ import physicalLayer.Sinal.Sinal;
 import physicalLayer.UteisGraficos.GraficoTxt;
 import physicalLayer.UteisSom.Som;
 import javax.sound.sampled.TargetDataLine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class CaptadorDeSom{
+
+    private static final Logger logger = LoggerFactory.getLogger(CaptadorDeSom.class);
 
     TargetDataLine linha = null;/*Linha por onde o sinal e lido da caixa de som*/
 
@@ -73,8 +77,7 @@ public class CaptadorDeSom{
 
             }
         } catch (Exception ex) {
-            ex.printStackTrace();            
-            System.exit(0);
+            logger.error("Exception");
         }
 
         return null;
