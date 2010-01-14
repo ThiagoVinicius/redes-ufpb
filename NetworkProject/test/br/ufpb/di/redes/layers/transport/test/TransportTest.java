@@ -48,7 +48,8 @@ public class TransportTest extends DefaultTest {
     }
 
     private void listenConnectImpl() {
-                int selector[];
+
+        int selector[];
 
         for (int i = 0; i < REPEAT; ++i) {
 

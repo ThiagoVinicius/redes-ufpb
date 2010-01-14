@@ -29,9 +29,9 @@ public class FakeNetwork extends Network {
 
     }
 
-    public FakeNetwork(DataLink[] downLayers, LinkedBlockingQueue<ReceivedData> received) {
+    public FakeNetwork(DataLink[] downLayers) {
         super(downLayers);
-        this.received = received;
+        this.received = new LinkedBlockingQueue<ReceivedData>();
     }
 
     public LinkedBlockingQueue<ReceivedData> received;
