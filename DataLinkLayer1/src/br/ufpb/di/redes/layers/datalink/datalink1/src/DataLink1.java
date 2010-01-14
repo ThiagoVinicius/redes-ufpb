@@ -246,6 +246,14 @@ public class DataLink1 extends DataLink {
         
         return aux;
     }
+
+    /**
+     * Método getter para a variável mac.
+     * @return MAC do enlace.
+     */
+    public int getMac() {
+        return mac;
+    }
     
     /**
      * Método que, a partir de uma lista de quadros de dados compondo uma
