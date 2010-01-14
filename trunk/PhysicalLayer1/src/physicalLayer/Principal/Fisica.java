@@ -22,7 +22,7 @@ public class Fisica extends Physical{
     TransmissorDeSom transmite = new TransmissorDeSom();
     CaptadorDeSom capta = new CaptadorDeSom();
     
-    private Thread downThread;
+    private Thread capturaThread;
     
     private static final Logger logger = LoggerFactory.getLogger(Fisica.class);
 
@@ -66,7 +66,7 @@ public class Fisica extends Physical{
     }
 
     private void iniciaCaptura() {
-        downThread = new Thread() {
+        capturaThread = new Thread() {
             @Override
             public void run() {
 
@@ -108,6 +108,6 @@ public class Fisica extends Physical{
                 logger.info("Thread de recebimento interrompida.");
             }
         };
-        downThread.start();
+        capturaThread.start();
     }
 }
