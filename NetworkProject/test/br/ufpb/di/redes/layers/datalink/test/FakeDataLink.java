@@ -50,4 +50,9 @@ public class FakeDataLink extends DataLink {
         return downLayer.minPacketSize();
     }
 
+    @Override
+    public int getMac() {
+        return 0;
+    }
+
 }

@@ -59,7 +59,9 @@ public class CheaterDataLink extends DataLink {
         bubbleUp(data, souce_mac);
     }
 
-
-
+    @Override
+    public int getMac() {
+        return mac;
+    }
 
 }
