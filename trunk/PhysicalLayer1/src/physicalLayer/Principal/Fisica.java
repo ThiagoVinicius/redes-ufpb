@@ -26,7 +26,12 @@ public class Fisica extends Physical{
     
     private static final Logger logger = LoggerFactory.getLogger(Fisica.class);
 
-    public Fisica() {
+    
+
+    @Override
+    public void start()
+    {
+        super.start();
         iniciaCaptura();
     }
 
