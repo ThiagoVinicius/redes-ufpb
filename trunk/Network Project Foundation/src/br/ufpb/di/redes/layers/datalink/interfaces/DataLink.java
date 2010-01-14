@@ -239,4 +239,10 @@ public abstract class DataLink extends Layer<Network, Physical> {
      */
     protected abstract void processReceivedData(InterlayerData data);
 
+    /**
+     * Deve retornar o endereco mac atual da camada.
+     * @return endereco mac
+     */
+    public abstract int getMac();
+
 }
