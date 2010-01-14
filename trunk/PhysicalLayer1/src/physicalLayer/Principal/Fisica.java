@@ -24,9 +24,7 @@ public class Fisica extends Physical{
     
     private Thread capturaThread;
     
-    private static final Logger logger = LoggerFactory.getLogger(Fisica.class);
-
-    
+    private static final Logger logger = LoggerFactory.getLogger(Fisica.class);    
 
     @Override
     public void start()
@@ -34,8 +32,6 @@ public class Fisica extends Physical{
         super.start();
         iniciaCaptura();
     }
-
-
 
     /*public static void main(String[] args) {
 
@@ -91,6 +87,7 @@ public class Fisica extends Physical{
                         try {
                             Thread.sleep(5);
                         } catch (Exception e) {
+                            logger.error("Excessao ", e);
                         }
                     }
                     else
