@@ -77,7 +77,7 @@ public class CaptadorDeSom{
 
             }
         } catch (Exception ex) {
-            logger.error("Exception");
+            logger.error("Exception ", ex);
         }
 
         return null;
