@@ -44,7 +44,7 @@ public class DefaultTest extends TestCase {
         config.load(new FileInputStream("topology.properties"));
 
         Machine machines[] = new Machine[new Integer(config.getProperty("machine.count"))];
-        Ring networks[] = new Ring[new Integer(config.getProperty("network.count"))];
+        Ring networks[] = new Ring[new Integer(config.getProperty("ring.count"))];
 
         interNetwork = new InterNetwork();
         interNetwork.allMachines = machines;
@@ -121,20 +121,30 @@ public class DefaultTest extends TestCase {
     }
 
     private void initSubnetworks(Ring[] networks, Machine allMachines[], Properties config) {
+
         for (int i = 0; i < networks.length; ++i) {
+            String rawRingInfo = config.getProperty("ring."+(i+1));
+            String splitRingInfo[] = rawRingInfo.split("[,]");
+
             networks[i] = new Ring();
-            String rawMachines = config.getProperty("network."+(i+1)+".machines");
-            String splitMachines[] = rawMachines.split(",");
-            
-            Machine machines[] = new Machine[splitMachines.length];
-            
-            for (int j = 0; j < machines.length; ++j) {
-                machines[j] = allMachines[(new Integer(splitMachines[j])) - 1];
+            networks[i].machines = new Machine[splitRingInfo.length];
+            networks[i].dataLinkIds = new int[splitRingInfo.length];
+
+            int j = 0;
+            for (String curDataLink : splitRingInfo) {
+                String splitCurDataLink[] = curDataLink.split("[.]");
+                int targetmachine = (new Integer(splitCurDataLink[0])) - 1;
+                int targetdatalink = (new Integer(splitCurDataLink[1])) - 1;
+
+                networks[i].machines[j] = allMachines[targetmachine];
+                networks[i].dataLinkIds[j] = targetdatalink;
+
+                ++j;
+
             }
 
-//            networks[i].machines = machines;
-//            networks[i].machineToDataLink = new int[machines.length];
         }
+
     }
 
     private void configureCheaterPhysicals(Machine[] machines, Properties config) {
@@ -181,7 +191,7 @@ public class DefaultTest extends TestCase {
 
 //                globalRings[i].machineToDataLink[targetmachine] = targetdatalink;
                 DataLink target = machines[targetmachine].datalink[targetdatalink];
-                globalRings[i].datalinks[j] = target;
+//                globalRings[i].datalinks[j] = target;
 
 
                 if (target instanceof CheaterDataLink) {

@@ -12,10 +12,11 @@ import br.ufpb.di.redes.layers.network.interfaces.Network;
 import br.ufpb.di.redes.layers.network.test.FakeNetwork;
 import br.ufpb.di.redes.layers.physical.interfaces.Physical;
 import br.ufpb.di.redes.layers.tests.DefaultTest;
-import br.ufpb.di.redes.layers.tests.Machine;
 import br.ufpb.di.redes.layers.tests.Ring;
 import br.ufpb.di.redes.layers.tests.Util;
 import java.util.Random;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -25,7 +26,27 @@ public class DataLinkTest extends DefaultTest {
 
     public static int REPEAT = 1000;
 
-    public void testSendReceive () {
+    private static Logger logger = LoggerFactory.getLogger(DataLinkTest.class);
+
+    public void testSendReceiveImpl () throws Exception {
+
+        Thread runner = new Thread () {
+            public void run() {
+                sendReceiveImpl();
+            }
+        };
+
+        runner.start();
+        runner.join(5000L); //demorou, perdeu
+
+        if (runner.isAlive())
+            fail("TIMEOUT do teste alcancado.");
+
+        runner.interrupt();
+
+    }
+
+    private void sendReceiveImpl () {
 
         int selector[];
         int ring;
@@ -34,6 +55,11 @@ public class DataLinkTest extends DefaultTest {
 
         DataLink dataLink1;
         DataLink dataLink2;
+
+        FakeNetwork top1;
+        FakeNetwork top2;
+
+        int id1, id2;
 
         InterlayerData data;
 
@@ -47,10 +73,16 @@ public class DataLinkTest extends DefaultTest {
 
             theRing = interNetwork.networks[ring];
 
-            selector = Util.nextInts(theRing.datalinks.length);
+            selector = Util.nextInts(theRing.machines.length);
 
-            dataLink1 = theRing.datalinks[selector[0]];
-            dataLink2 = theRing.datalinks[selector[1]];
+            dataLink1 = theRing.getDataLink(selector[0]);
+            dataLink2 = theRing.getDataLink(selector[1]);
+
+            top1 = (FakeNetwork) theRing.machines[selector[0]].network;
+            top2 = (FakeNetwork) theRing.machines[selector[1]].network;
+
+            id1 = theRing.dataLinkIds[selector[0]];
+            id2 = theRing.dataLinkIds[selector[1]];
 
             low = dataLink1.minPacketSize();
             high = dataLink2.maxPacketSize();
@@ -66,8 +98,12 @@ public class DataLinkTest extends DefaultTest {
                 }
             }
 
-            
-
+            top1.bubbleDown(data, dataLink2.getMac(), id2);
+            try {
+                assertEquals(data, top2.received.take());
+            } catch (InterruptedException ex) {
+                logger.error("", ex);
+            }
 
         }
 
