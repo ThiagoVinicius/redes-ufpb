@@ -12,7 +12,7 @@ import java.io.FileWriter;
 public class GraficoTxt {
 
     public static void escreveOndaTxt(byte onda[], String arquivo) {
-        System.out.println("");
+
         FileWriter a = null;
         try {
             a = new FileWriter(new File(arquivo), false);
@@ -29,7 +29,7 @@ public class GraficoTxt {
     }
 
     public static void bitsDoGrafo(byte onda[], int offset) {
-        System.out.println("");
+        
         int fim = offset + Sinal.QUANTIDADEAMOSTRAPORSINAL * Sinal.QUANTIDADEDESINAIS;
         byte[] bit = new byte[Sinal.QUANTIDADEAMOSTRAPORSINAL];
 

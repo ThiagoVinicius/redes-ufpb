@@ -5,12 +5,8 @@
 package physicalLayer.AgentesDeSom;
 
 import physicalLayer.Sinal.Sinal;
-import physicalLayer.UteisGraficos.GraficoTxt;
 import physicalLayer.UteisSom.Som;
 import br.ufpb.di.redes.layers.all.InterlayerData;
-import br.ufpb.di.redes.layers.physical.interfaces.Physical;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.sound.sampled.SourceDataLine;
 
 /**
@@ -27,50 +23,7 @@ public class TransmissorDeSom{
     static byte[] mensBitSinalizador = Sinal.converteStringParaBytes("11");/*COntem a mensagem do bit sinalizador*/
 
 
-    
-    public void run() {
-
-        while (true) {
-            try {
-                /*01 Verifica na pilha de enlace se há alguma mensagem a ser transmitida*/
-                Thread.sleep(1000);
-                /*02 'Se Nao',
-                aguarda algum tempo pra verificar novamente ou espera ser avisada por enlace*/
-                /*03 'Se sim'
-                constroi mensagem*/
-                System.out.println("Transmissor enviando:");
-
-
-                /**
-                 *Tempo que a thread deve esperar para após o criaBitSinalizador
-                 * antes de iniciar o envio do sinal */
-                /*Teste(01):11 11101011 00000000 11 0K*/
-                /*Teste(02):11 00110011 00110011 11 0K*/
-                /*Teste(03):11 01010101 01010101 11 0k*/
-                /*Teste(04):11 00000010 00000000 11 0k*/
-                /*Teste(05):11 11101111 11111111 11 0k*/
-                //11111011111111111111                              11111010110000000011
-                constroiOndaCompleta(Sinal.converteStringParaBytes("11111010110000000011"), abData);
-                criaBitSinalizador(TransmissorDeSom.mensBitSinalizador, bitSinalizador);//110110001101011011000110101011111111111011101110111
-
-
-                byte[] m = montaSinal(bitSinalizador,400, abData);
-
-                GraficoTxt.escreveOndaTxt(m, "onda.enviada.txt");
-                enviaSom(m);                               //  110110001101011011000110101011111111111011101110111
-
-
-                // linha.drain();
-            /*02 'Se Nao',
-                aguarda algum tempo pra verificar novamente ou espera ser avisada por enlace*/
-                /*03 'Se sim'
-                constroi mensagem*/
-            } catch (InterruptedException ex) {
-                Logger.getLogger(TransmissorDeSom.class.getName()).log(Level.SEVERE, null, ex);
-                ex.printStackTrace();
-            }
-        }
-    }
+  
 
     /*******
      *

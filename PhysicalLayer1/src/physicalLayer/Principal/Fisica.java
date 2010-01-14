@@ -7,12 +7,15 @@ package physicalLayer.Principal;
 import physicalLayer.AgentesDeSom.CaptadorDeSom;
 import physicalLayer.AgentesDeSom.TransmissorDeSom;
 import physicalLayer.Sinal.Sinal;
-import physicalLayer.UteisGraficos.GraficoTxt;
 import br.ufpb.di.redes.layers.all.InterlayerData;
 import br.ufpb.di.redes.layers.physical.interfaces.Physical;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 
+ * @author Janduy e Hugo
+ */
 
 public class Fisica extends Physical{
 
@@ -29,11 +32,9 @@ public class Fisica extends Physical{
 
 
 
-    public static void main(String[] args) {
+    /*public static void main(String[] args) {
 
         byte[] Um = new byte[Sinal.QUANTIDADEAMOSTRAPORSINAL];
-        System.out.println("Pora" + Um.length);
-        System.out.println("Pora Pica" + Sinal.QUANTIDADEAMOSTRAPORSINAL);
         Sinal.escreveUm(Um, 0);
         GraficoTxt.escreveOndaTxt(Um, "Um.txt");
 
@@ -47,7 +48,7 @@ public class Fisica extends Physical{
         TransmissorDeSom tds = new TransmissorDeSom();
         //cdp.start();
         //tds.start();
-    }
+    }*/
 
     @Override
     protected void processSentData(InterlayerData data) {
@@ -73,6 +74,8 @@ public class Fisica extends Physical{
                 boolean b = true;
 
                 InterlayerData data = new InterlayerData(1);
+
+                logger.info("Thread de recebimento iniciada.");
 
                 while(b)
                 {
@@ -102,7 +105,7 @@ public class Fisica extends Physical{
                     }
                 }
 
-                logger.debug("Thread de recebimento interrompida.");
+                logger.info("Thread de recebimento interrompida.");
             }
         };
         downThread.start();
