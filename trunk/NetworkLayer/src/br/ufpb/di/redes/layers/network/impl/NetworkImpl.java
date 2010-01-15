@@ -18,12 +18,15 @@ import br.ufpb.di.redes.layers.network.interfaces.Network;
 public class NetworkImpl extends Network {
     
     private int [] source_ips;
+    public final int SMALLER_DATALINK_MAX_PACKET_SIZE;
 
     /**
      * PATERN_IP_POSITION - Usado para quando nenhum dos meus IPs concincidir com o IP recebido de cima
      */
-    public enum Constants {HEADER_LENGHT(8), NETWORK_LENGHT_OF_IP(2), STATION_LENGHT_OF_IP(2),
-        PATERN_IP_POSITION(0), NETWORK_FULL_ADDRESS_SIZE(NETWORK_LENGHT_OF_IP.getValue() + STATION_LENGHT_OF_IP.getValue());
+    public enum Constants {NETWORK_LENGHT_OF_IP(2), STATION_LENGHT_OF_IP(2), 
+        PATERN_IP_POSITION(0), SEQUENCY_NUMBER(2), TTL(2),
+        HEADER_LENGHT(NETWORK_LENGHT_OF_IP.value + STATION_LENGHT_OF_IP.value + SEQUENCY_NUMBER.value + TTL.value),
+        NETWORK_FULL_ADDRESS_SIZE(NETWORK_LENGHT_OF_IP.value + STATION_LENGHT_OF_IP.value);
         private int value;
 
         private Constants(int value){
@@ -59,8 +62,9 @@ public class NetworkImpl extends Network {
      * @param downLayers as camadas inferiores
      * @param source_ips os ips origem que cada posicao DEVE esta associoada a cada posicao do array de enlaces
      */
-    public NetworkImpl(DataLink[] downLayers, int [] source_ips) {
+    public NetworkImpl(DataLink[] downLayers, int [] source_ips, int smaller_datalink_max_packet_size) {
         super(downLayers);
+        this.SMALLER_DATALINK_MAX_PACKET_SIZE = smaller_datalink_max_packet_size;
         this.source_ips = source_ips;
     }
 
@@ -108,12 +112,16 @@ public class NetworkImpl extends Network {
 
     @Override
     public int maxPacketSize() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        /*
+         * So posso quebrar o pacote recebido no
+         * numero maximo que posso representar no numero de sequencia 'x' o menor maximo dos enlaces.
+         */
+        return SMALLER_DATALINK_MAX_PACKET_SIZE * Constants.SEQUENCY_NUMBER.value;
     }
 
     @Override
     public int minPacketSize() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return Constants.HEADER_LENGHT.value;
     }
 
     @Override
