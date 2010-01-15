@@ -457,7 +457,7 @@ public class DataLink1 extends DataLink {
                 return;
             }
 
-            mensagemReceivedAtual.add(desenquadra(data));
+            mensagemReceivedAtual.add(data);
             return;
         } else if (controle == CTRLQUADRODEDADOSFINAL) {
             /**
@@ -469,9 +469,15 @@ public class DataLink1 extends DataLink {
                 return;
             }
 
-            mensagemReceivedAtual.add(desenquadra(data));
-            for (int i = 0; i < mensagemReceivedAtual.size(); i++)
-                bubbleUp(mensagemReceivedAtual.get(i), mac);
+            mensagemReceivedAtual.add(data);
+            InterlayerData msg = recuperaMensagem(mensagemReceivedAtual);
+            if (msg == null) {
+                logger.warn("Erro na recuperação da mensagem recebida.");
+                logger.warn("Mensagem descartada.");
+            } else {
+                logger.info("Mensagem recuperada com sucesso e enviada para a Rede.");
+                bubbleUp(msg, mac);
+            }
             mensagemReceivedAtual.clear();
             mensagemASerRecebida = false;
             /**
