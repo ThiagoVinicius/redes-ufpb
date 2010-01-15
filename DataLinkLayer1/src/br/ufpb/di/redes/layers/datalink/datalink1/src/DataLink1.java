@@ -374,6 +374,7 @@ public class DataLink1 extends DataLink {
     @Override
     protected void processSentData(InterlayerData data, int dest_mac) {
         mensagemSentAtual = criaQuadrosDeDados(data);
+        logger.info("Mensagem recebida da camada de Rede.");
         if (mensagemSentAtual == null || mensagemSentAtual.size() == 0) {
             logger.warn("Problema na mensagem recebida da Rede.");
             logger.warn("Mensagem descartada.");
@@ -382,7 +383,7 @@ public class DataLink1 extends DataLink {
 
         mensagemASerEnviada = true;
         try {
-            /** Espera autorização para enviar a mensagem. */
+            logger.info("Aguardando autorização para envio de mensagem.");
             s1.acquire();
         } catch (InterruptedException ex) {
             logger.error("Excecao lancada em processSentData");
@@ -395,15 +396,16 @@ public class DataLink1 extends DataLink {
         for (int i = 0; i < mensagemSentAtual.size(); i++)
             bubbleDown(mensagemSentAtual.get(i));
         mensagemASerEnviada = false;
+        logger.info("Mensagem enviada para a camada Física.");
         s2.release();
     }
 
     @Override
     protected void processReceivedData(InterlayerData data) {
+        logger.info("Mensagem recebida da camada Física.");
         if (data.length != TAMQUADRODEDADOS &&
             data.length != TAMQUADROPERMISSAOENDERECAMENTO) {
-            logger.warn("Recebida mensagem com tamanho incorreto. Mensagem " +
-                    "descartada.");
+            logger.warn("Mensagem com tamanho incorreto será descartada.");
             return;
         }
         int controle = getControle(data);
@@ -427,6 +429,7 @@ public class DataLink1 extends DataLink {
             if (getBitDeDadosToken(data) && (getMACDestino(data) == mac)
                     && !(getBitDePermissaoToken(data))) {
                 mensagemASerRecebida = true;
+                logger.info("Token recebido que há mensagem para este enlace.");
                 return;
             }
 
@@ -435,6 +438,7 @@ public class DataLink1 extends DataLink {
              * libera a thread de envio.
              */
             if (mensagemASerEnviada && getBitDePermissaoToken(data)) {
+                logger.info("Ocupado o token para envio de mensagem.");
                 s1.release();
                 try {
                     /**
@@ -453,10 +457,12 @@ public class DataLink1 extends DataLink {
              * não interessa.
              */
             if (!mensagemASerRecebida) {
+                logger.info("Mandando para baixo quadro de dados que não interessa.");
                 bubbleDown(data);
                 return;
             }
 
+            logger.info("Armazenando quadro de dados intermediário.");
             mensagemReceivedAtual.add(data);
             return;
         } else if (controle == CTRLQUADRODEDADOSFINAL) {
@@ -465,11 +471,13 @@ public class DataLink1 extends DataLink {
              * não interessa.
              */
             if (!mensagemASerRecebida) {
+                logger.info("Mandando para baixo quadro de dados que não interessa.");
                 bubbleDown(data);
                 return;
             }
 
             mensagemReceivedAtual.add(data);
+            logger.info("Quadro de dados final recebido. Recuperando mensagem...");
             InterlayerData msg = recuperaMensagem(mensagemReceivedAtual);
             if (msg == null) {
                 logger.warn("Erro na recuperação da mensagem recebida.");
@@ -499,6 +507,7 @@ public class DataLink1 extends DataLink {
 //                }
 //                return;
 //            }
+            return;
         }
     }
 
