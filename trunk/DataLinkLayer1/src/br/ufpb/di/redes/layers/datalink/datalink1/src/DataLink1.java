@@ -203,6 +203,7 @@ public class DataLink1 extends DataLink {
             if (aux == null) {
                 return null;
             }
+            logger.debug("Quadro " + aux + " criado");
             quadros.add(aux);
         }
 
@@ -349,6 +350,7 @@ public class DataLink1 extends DataLink {
         }
 
         logger.info("Mensagem recuperada com tamanho " + aux.length);
+        logger.debug("Mensagem recuperada: " + aux);
 
         return aux;
     }
@@ -379,8 +381,8 @@ public class DataLink1 extends DataLink {
      */
     @Override
     protected void processSentData(InterlayerData data, int dest_mac) {
+        logger.info("Mensagem " + data + " recebida da camada de Rede.");
         mensagemSentAtual = criaQuadrosDeDados(data);
-        logger.info("Mensagem recebida da camada de Rede.");
         if (mensagemSentAtual == null || mensagemSentAtual.size() == 0) {
             logger.warn("Problema na mensagem recebida da Rede.");
             logger.warn("Mensagem descartada.");
@@ -392,7 +394,7 @@ public class DataLink1 extends DataLink {
             logger.info("Aguardando autorização para envio de mensagem.");
             s1.acquire();
         } catch (InterruptedException ex) {
-            logger.error("Excecao lancada em processSentData");
+            logger.error("Excecao lancada em processSentData ", ex);
         }
         
         /** Envia na frente um token relativo à mensagem atual. */
@@ -453,7 +455,7 @@ public class DataLink1 extends DataLink {
                      */
                     s2.acquire();
                 } catch (InterruptedException ex) {
-                   logger.error("Excecao lancada em processReceivedData");
+                   logger.error("Excecao lancada em processReceivedData ", ex);
                 }
                 return;
             }
@@ -467,8 +469,8 @@ public class DataLink1 extends DataLink {
                 bubbleDown(data);
                 return;
             }
-
-            logger.info("Armazenando quadro de dados intermediário.");
+            
+            logger.info("Armazenando quadro de dados intermediário (" + data + ").");
             mensagemReceivedAtual.add(data);
             return;
         } else if (controle == CTRLQUADRODEDADOSFINAL) {
@@ -483,7 +485,7 @@ public class DataLink1 extends DataLink {
             }
 
             mensagemReceivedAtual.add(data);
-            logger.info("Quadro de dados final recebido. Recuperando mensagem...");
+            logger.info("Quadro de dados final recebido. (" + data + "). Recuperando mensagem...");
             InterlayerData msg = recuperaMensagem(mensagemReceivedAtual);
             if (msg != null)
                 bubbleUp(msg, mac);
@@ -505,7 +507,7 @@ public class DataLink1 extends DataLink {
 //                try {
 //                    s2.acquire();
 //                } catch (InterruptedException ex) {
-//                   logger.error("Excecao lancada em processReceivedData");
+//                   logger.error("Excecao lancada em processReceivedData ", ex);
 //                }
 //                return;
 //            }
