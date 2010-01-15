@@ -182,6 +182,7 @@ public class DataLink1 extends DataLink {
      * @return ArrayList contendo todos os quadros criados por este método.
      */
     private ArrayList<InterlayerData> criaQuadrosDeDados (InterlayerData dados) {
+        logger.info("Encapsulando mensagem de tamanho " + dados.length);
         if (dados.length < BITSDADOS || dados.length % BITSDADOS != 0) {
             logger.warn("Mensagem recebida com tamanho errado.");
             logger.warn("Não será possível criar os quadros, retornando nulo");
@@ -189,7 +190,6 @@ public class DataLink1 extends DataLink {
         }
         ArrayList<InterlayerData> quadros = new ArrayList<InterlayerData>();
         InterlayerData aux;
-        logger.info("Encapsulando mensagem de tamanho " + dados.length);
         for (int i = 0; i < dados.length; i += BITSDADOS) {
             aux = new InterlayerData (BITSDADOS);
             aux.putInfo(0, BITSDADOS, dados.takeInfo(i, BITSDADOS));
