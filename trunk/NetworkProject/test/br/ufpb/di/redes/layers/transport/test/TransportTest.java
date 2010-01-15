@@ -40,6 +40,9 @@ public class TransportTest extends DefaultTest {
 
         runner.join(5000L); //se demorar muito, canso de esperar...
 
+        if (runner.isAlive())
+            fail("Teste alcancou TIMEOUT - possivel deadlock detectado.");
+
         runner.interrupt();
 
     }
