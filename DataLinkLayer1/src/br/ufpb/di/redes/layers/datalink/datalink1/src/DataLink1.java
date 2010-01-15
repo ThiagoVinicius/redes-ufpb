@@ -34,7 +34,6 @@ import br.ufpb.di.redes.layers.datalink.interfaces.DataLink;
 import br.ufpb.di.redes.layers.physical.interfaces.Physical;
 import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,8 +83,15 @@ public class DataLink1 extends DataLink {
      */
     private ArrayList<InterlayerData> mensagemSentAtual;
     private ArrayList<InterlayerData> mensagemReceivedAtual;
+
+    /**
+     * Variáveis que indicam se o corrente enlace está em algum estado especial
+     * (pronto para enviar mensagem, para receber mensagem, ou descartando
+     * quadros).
+     */
     boolean mensagemASerEnviada;
     boolean mensagemASerRecebida;
+    boolean descartaQuadros;
 
     Semaphore s1, s2; // para a sincronizacao - provavelmente nao vai dar certo! =P
     
@@ -102,6 +108,7 @@ public class DataLink1 extends DataLink {
         mensagemReceivedAtual = new ArrayList<InterlayerData>();
         mensagemASerEnviada = false;
         mensagemASerRecebida = false;
+        descartaQuadros = false;
     }
 
     /**
@@ -418,9 +425,6 @@ public class DataLink1 extends DataLink {
         }
     }
 
-    /**
-     * AINDA É PRECISO REALIZAR OS TESTES PARA OS 2 MÉTODOS SEGUINTES!!!!!
-     */
     @Override
     protected void processSentData(InterlayerData data, int dest_mac) {
         logger.info("Mensagem " + data + " recebida da camada de Rede.");
@@ -460,6 +464,22 @@ public class DataLink1 extends DataLink {
         }
         int controle = getControle(data);
         if (controle == CTRLQUADROPERMISSAOEENDERECAMENTO) {
+            /**
+             * Se a verificação de CRC falhar, envia um novo token e entra em
+             * um modo em que descartará os próximos quadros de dados até
+             * a chegada do próximo token. Isto é necessário pois pode ser
+             * que o token com problema de CRC esteja carregando quadros de dados
+             * que, se não forem descartados, ficarão vagando na rede.
+             */
+            if (!verificaCRC(data)) {
+                logger.warn("Erro na verificação de CRC do token. Um novo será enviado.");
+                descartaQuadros = true;
+                bubbleDown(criaTokenInicial());
+            }
+
+            /** Sai do modo de descartar quadros se esse token estiver correto. */
+            descartaQuadros = false;
+
             /**
              * Se o enlace não tem nenhuma mensagem a enviar e o
              * token atual não tem nenhuma mensagem para este enlace,
@@ -502,6 +522,9 @@ public class DataLink1 extends DataLink {
                 return;
             }
         } else if (controle == CTRLQUADRODEDADOSINTERMEDIARIO) {
+            /** Se estiver neste modo, deve descartar este quadro. */
+            if (descartaQuadros) return;
+
             /**
              * Se nao há mensagem para ser recebida, este quadro de dados
              * não interessa.
@@ -516,6 +539,9 @@ public class DataLink1 extends DataLink {
             mensagemReceivedAtual.add(data);
             return;
         } else if (controle == CTRLQUADRODEDADOSFINAL) {
+            /** Se estiver neste modo, deve descartar este quadro. */
+            if (descartaQuadros) return;
+            
             /**
              * Se nao há mensagem para ser recebida, este quadro de dados
              * não interessa.
@@ -564,6 +590,6 @@ public class DataLink1 extends DataLink {
 
     @Override
     public int maxPacketSize() {
-        return 80; // 80 é overkill, porra!
+        return 80;
     }
 }
