@@ -25,6 +25,7 @@ public class TCP extends Transport implements IConstants {
     private static final Logger logger = LoggerFactory.getLogger(TCP.class);
     private int source_ip;
     private int local_port = 0;
+    private PacketTCP lastReceivedPacket;
 
     ThreeWaysHandshake handshake = new ThreeWaysHandshake();
     //List container = new LinkedList<ToReceiveMessage>();
@@ -133,8 +134,54 @@ public class TCP extends Transport implements IConstants {
     }
 
     @Override
-    protected void close(Connection con) {
+    @SuppressWarnings("empty-statement")
+    protected void close(Connection connection) {
         throw new UnsupportedOperationException("Not supported yet.");
+//        PairOfTwoWaysHandshake handshakeClose = new PairOfTwoWaysHandshake();
+//        ToReceiveMessage message = null;
+//
+//        // tera algo aqui no if, ate' que nao tenha decidido fica a estrutura
+//        if(true) {
+//
+//            long initialTime = System.currentTimeMillis();
+//            long finalTime = 0;
+//
+//            PacketTCP firstWay = handshakeClose.firstWay(lastReceivedPacket);
+//
+//            String dataHeaderFirstWay = firstWay.toString();
+//            InterlayerData dataFirstWay = new InterlayerData(dataHeaderFirstWay.length());
+//
+//            dataFirstWay.data[0] = parseStringToInt(dataHeaderFirstWay);
+//
+//            bubbleDown(dataFirstWay, connection.destIp);
+//
+//            // ver o fato se ainda esta' recebendo dados
+//            while( (container.size() == 0 ));
+//
+//            message = (ToReceiveMessage) container.poll();
+//
+//            String dataReceived = parseIntToString(message.data.data[0], NUM_BITS_HEADER);
+//
+//            PacketTCP fourthWay = handshakeClose.fourthWay(new PacketTCP(dataReceived));
+//
+//            String dataHeaderFourthWay = fourthWay.toString();
+//            InterlayerData dataFourthWay = new InterlayerData(dataHeaderFourthWay.length());
+//
+//            dataFirstWay.data[0] = parseStringToInt(dataHeaderFourthWay);
+//
+//            bubbleDown(dataFourthWay, connection.destIp);
+//
+//            while( finalTime < MAXIMUM_SEGMENT_LIFETIME ) {
+//                finalTime = System.currentTimeMillis() - initialTime;
+//            }
+//
+//            connection.close();
+//
+//        }
+//        else {
+//        //    packet = handshakeClose.secondWay(packet);
+//        //    packet = handshakeClose.thirdWay(packet);
+//        }
     }
 
     @Override
