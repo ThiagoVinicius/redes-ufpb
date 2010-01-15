@@ -98,10 +98,10 @@ public class DataLinkTest extends DefaultTest {
             data = new InterlayerData(dataSize);
 
             for (int j = 0; j < data.length; ++j) {
-                if (Math.random() <= .5) {
-                    data.setBit(i);
+                if (Math.random() < .5) {
+                    data.setBit(j);
                 } else {
-                    data.clearBit(i);
+                    data.clearBit(j);
                 }
             }
 
