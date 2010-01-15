@@ -182,8 +182,8 @@ public class DataLink1 extends DataLink {
      * @return ArrayList contendo todos os quadros criados por este método.
      */
     private ArrayList<InterlayerData> criaQuadrosDeDados (InterlayerData dados) {
-        if (dados.length < BITSDADOS) {
-            logger.warn("Mensagem recebida com tamanho muito pequeno.");
+        if (dados.length < BITSDADOS || dados.length % BITSDADOS != 0) {
+            logger.warn("Mensagem recebida com tamanho errado.");
             logger.warn("Não será possível criar os quadros, retornando nulo");
             return null;
         }
