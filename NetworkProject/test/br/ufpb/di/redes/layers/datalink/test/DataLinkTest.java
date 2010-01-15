@@ -15,6 +15,7 @@ import br.ufpb.di.redes.layers.tests.DefaultTest;
 import br.ufpb.di.redes.layers.tests.Ring;
 import br.ufpb.di.redes.layers.tests.Util;
 import java.util.Random;
+import junit.framework.TestCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +36,8 @@ public class DataLinkTest extends DefaultTest {
                 sendReceiveImpl();
             }
         };
+
+        Thread.sleep(500L);
 
         runner.start();
         runner.join(5000L); //demorou, perdeu
@@ -66,6 +69,7 @@ public class DataLinkTest extends DefaultTest {
         Random rand = new Random();
         
         int low, high, diff;
+        int dataSize;
 
         for (int i = 0; i < REPEAT; ++i) {
 
@@ -87,8 +91,11 @@ public class DataLinkTest extends DefaultTest {
             low = dataLink1.minPacketSize();
             high = dataLink2.maxPacketSize();
             diff = high - low + 1;
+            
+            dataSize = rand.nextInt(diff) + low;
+            dataSize = (dataSize/low)*low;
 
-            data = new InterlayerData(rand.nextInt(diff) + low);
+            data = new InterlayerData(dataSize);
 
             for (int j = 0; j < data.length; ++j) {
                 if (Math.random() <= .5) {
@@ -100,9 +107,10 @@ public class DataLinkTest extends DefaultTest {
 
             top1.bubbleDown(data, dataLink2.getMac(), id2);
             try {
-                assertEquals(data, top2.received.take());
+                assertEquals(data, top2.received.take().data);
             } catch (InterruptedException ex) {
                 logger.error("", ex);
+                TestCase.fail("Excecao encontrada. Parando.");
             }
 
         }
