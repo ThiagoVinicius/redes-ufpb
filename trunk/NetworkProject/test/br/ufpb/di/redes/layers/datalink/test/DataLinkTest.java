@@ -25,9 +25,11 @@ import org.slf4j.LoggerFactory;
  */
 public class DataLinkTest extends DefaultTest {
 
-    public static int REPEAT = 1000;
+    public static int REPEAT = 10000;
 
     private static Logger logger = LoggerFactory.getLogger(DataLinkTest.class);
+
+    private volatile boolean failed = false;
 
     public void testSendReceiveImpl () throws Exception {
 
@@ -37,15 +39,13 @@ public class DataLinkTest extends DefaultTest {
             }
         };
 
-        Thread.sleep(500L);
-
         runner.start();
-        runner.join(5000L); //demorou, perdeu
-
-        if (runner.isAlive())
-            fail("TIMEOUT do teste alcancado.");
-
+        runner.join(60000L); //demorou, perdeu
         runner.interrupt();
+        runner.join();
+
+        if (failed)
+            fail("Timeout atingido!");
 
     }
 
@@ -78,7 +78,7 @@ public class DataLinkTest extends DefaultTest {
             theRing = interNetwork.networks[ring];
 
             selector = Util.nextInts(theRing.machines.length);
-
+            
             dataLink1 = theRing.getDataLink(selector[0]);
             dataLink2 = theRing.getDataLink(selector[1]);
 
@@ -105,12 +105,13 @@ public class DataLinkTest extends DefaultTest {
                 }
             }
 
-            top1.bubbleDown(data, dataLink2.getMac(), id2);
+            top1.bubbleDown(data, dataLink2.getMac(), id1);
+
             try {
                 assertEquals(data, top2.received.take().data);
             } catch (InterruptedException ex) {
-                logger.error("", ex);
-                TestCase.fail("Excecao encontrada. Parando.");
+                failed = true;
+                break;
             }
 
         }
