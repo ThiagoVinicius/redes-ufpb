@@ -110,8 +110,7 @@ public abstract class Network extends Layer<Transport, DataLink> {
     @Override
     public void start () {
         logger.info("Iniciando servico");
-        sendBuffer.clear();
-        sendThread = new Thread() {
+        sendThread = new Thread(getName() + ":sender") {
             @Override
             public void run() {
                 try {
@@ -126,8 +125,7 @@ public abstract class Network extends Layer<Transport, DataLink> {
 
         };
 
-        receivedBuffer.clear();
-        receivedThread = new Thread() {
+        receivedThread = new Thread(getName() + ":receiver") {
             @Override
             public void run() {
                 try {

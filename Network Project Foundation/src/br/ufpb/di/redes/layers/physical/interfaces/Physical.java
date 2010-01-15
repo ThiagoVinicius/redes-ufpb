@@ -123,8 +123,7 @@ public abstract class Physical extends Layer <DataLink, NullLayer> {
     @Override
     public synchronized void start() {
         logger.info("Iniciando servico");
-        downBuffer.clear();
-        downThread = new Thread() {
+        downThread = new Thread(getName() + ":sender") {
             @Override
             public void run() {
                 try {

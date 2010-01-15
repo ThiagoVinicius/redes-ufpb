@@ -145,4 +145,12 @@ public abstract class Layer <U extends Layer, D extends Layer> implements Joint<
      */
     public abstract int maxPacketSize();
 
+    /**
+     * Retorna o identificador da camada, para debug.
+     * @return
+     */
+    public String getName() {
+        return "SEM NOME";
+    }
+
 }
