@@ -56,10 +56,12 @@ public class DataLink1 extends DataLink {
     private static final int BITSDADOS = 8;
 
     /**
-     * Tamanho dos quadros de dados e de permissao e endereçamento.
+     * Tamanho dos quadros de dados e de permissao e endereçamento e dos quadros
+     * sem CRC.
      */
     private static final int TAMQUADRODEDADOS = 16;
     private static final int TAMQUADROPERMISSAOENDERECAMENTO = 16;
+    private static final int TAMMENSAGEMSEMCRC = 12;
     
     /**
      * Valores de campos de controle de quadro para os 3 tipos diferentes
@@ -110,8 +112,47 @@ public class DataLink1 extends DataLink {
      * @return valor do CRC.
      */
     private int calculaCRC4 (InterlayerData dados) {
-        int info = dados.takeInfo(0, 12);
-        return 0; // só para testes, of course! =)
+        /** Se a mensagem nao tem tamanho suficiente, não é calculado o CRC. */
+        if (dados.length < TAMMENSAGEMSEMCRC) {
+            logger.warn("Mensagem com tamanho errado para o calculo de CRC.");
+            logger.warn("Retornando 0");
+            return 0;
+        }
+
+        /**
+         * Cria-se inicialmente uma mensagem auxiliar contendo os 12 bits
+         * de dados a partir dos quais se calculará o CRC. Os bits seguintes
+         * são preenchidos com 0.
+         */
+        InterlayerData aux = new InterlayerData(TAMMENSAGEMSEMCRC + TAMCRC);
+        aux.putInfo(0, TAMMENSAGEMSEMCRC, dados.takeInfo(0, TAMMENSAGEMSEMCRC));
+
+        /**
+         * O polinomio gerador utilizado é o x^4 + x + 1 = 0b10011. O bit
+         * mais significativo, porém, não é necessário, por conta disso,
+         * será representado como 0b0011 = 3.
+         */
+        int polinomioGerador = 3;
+
+        int infoAtual = 0;
+        for (int i = 0; i < TAMMENSAGEMSEMCRC; i++) {
+            /**
+             * O XOR deve ser efetuado quando o bit da posição atual
+             * (que é o mais significativo, já que os anteriores são zerados
+             * a cada etapa) for 1.
+             */
+            if (aux.getBit(i)) {
+                infoAtual = aux.takeInfo(i+1, TAMCRC);
+                infoAtual ^= polinomioGerador;
+                aux.clearBit(i);
+                if (i != (TAMMENSAGEMSEMCRC -1)) {
+                    aux.putInfo(i+1, TAMCRC, infoAtual);
+                }
+            }
+        }
+        /** O CRC estará nos últimos 4 bits de aux. */
+        logger.debug("CRC calculado: " + aux.takeInfo(aux.length-TAMCRC, TAMCRC));
+        return aux.takeInfo(aux.length-TAMCRC, TAMCRC);
     }
 
     /**
@@ -345,6 +386,7 @@ public class DataLink1 extends DataLink {
                 logger.warn("Erro na verificação de CRC - mensagem perdida.");
                 return null;
             }
+            logger.debug("CRC verificado corretamente");
             aux.putInfo(i*BITSDADOS, BITSDADOS,
                     desenquadra(msg.get(i)).takeInfo(0, BITSDADOS));
         }
