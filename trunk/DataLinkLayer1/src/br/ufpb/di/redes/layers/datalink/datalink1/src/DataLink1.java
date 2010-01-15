@@ -316,6 +316,14 @@ public class DataLink1 extends DataLink {
     public int getMACOrigem (InterlayerData token) {
         return token.takeInfo(TAMCONTROLE, TAMMAC);
     }
+
+    /**
+     * Método getter do name deste enlace.
+     * @return nome do enlace, contendo seu MAC.
+     */
+    public String getName () {
+        return "Enlace de MAC " + mac;
+    }
     
     /**
      * Método que, a partir de uma lista de quadros de dados compondo uma
