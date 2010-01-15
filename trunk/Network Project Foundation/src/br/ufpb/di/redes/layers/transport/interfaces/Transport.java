@@ -52,8 +52,7 @@ public abstract class Transport extends Layer<NullLayer, Network> {
     public void start() {
         super.start();
         logger.info("Iniciando servico");
-        receivedBuffer.clear();
-        receivedThread = new Thread() {
+        receivedThread = new Thread(getName() + ":receiver") {
             @Override
             public void run() {
                 try {
