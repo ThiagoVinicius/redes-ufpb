@@ -12,6 +12,7 @@ import br.ufpb.di.redes.layers.transport.interfaces.Transport;
 import br.ufpb.di.redes.layers.transport.interfaces.UnnableToConnectException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +27,8 @@ public class TCP extends Transport implements IConstants {
     private int local_port = 0;
 
     ThreeWaysHandshake handshake = new ThreeWaysHandshake();
-    List container = new LinkedList<ToReceiveMessage>();;
+    //List container = new LinkedList<ToReceiveMessage>();
+    ArrayBlockingQueue container = new ArrayBlockingQueue<ToReceiveMessage>(1);
 
     public TCP(Network downLayer, int source_ip) {
         super(downLayer);
@@ -45,7 +47,8 @@ public class TCP extends Transport implements IConstants {
     @Override
     protected void processReceivedData(InterlayerData data, int source_ip) {
         ToReceiveMessage receive = new ToReceiveMessage(data, source_ip);
-        container.add(0, receive);
+        //container.add(0, receive);
+        container.add(receive);
     }
 
     @Override
@@ -62,14 +65,17 @@ public class TCP extends Transport implements IConstants {
         
         initialTime = System.currentTimeMillis();
 
+        
+
         while( container.size() == 0 ) {
+            //logger.debug("connect-");
             finalTime = System.currentTimeMillis();
             if( ( finalTime - initialTime ) > TIME_OUT_CONNECTION ) {
                 throw new UnnableToConnectException();
             }
         }
 
-        ToReceiveMessage message = (ToReceiveMessage) container.get(0);
+        ToReceiveMessage message = (ToReceiveMessage) container.poll();
 
         String dataReceived = parseIntToString(message.data.data[0], NUM_BITS_HEADER);
 
@@ -94,12 +100,18 @@ public class TCP extends Transport implements IConstants {
         PacketTCP packetReceived;
         ToReceiveMessage message = null;
 
+        logger.debug("entrei no listen");
+
         do {
             while( (container.size() == 0 ));
+
+            logger.debug("listen-");
             
-            message = (ToReceiveMessage) container.get(0);
+            message = (ToReceiveMessage) container.poll();
 
             String dataReceived = parseIntToString(message.data.data[0], NUM_BITS_HEADER);
+
+            //logger.debug(dataReceived);
             
             packetReceived = new PacketTCP(dataReceived);
         } while( !packetReceived.getPortLocal().

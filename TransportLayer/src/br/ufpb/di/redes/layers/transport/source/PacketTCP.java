@@ -5,11 +5,16 @@
 
 package br.ufpb.di.redes.layers.transport.source;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  *
  * @author Jailton
  */
 public class PacketTCP implements IConstants {
+
+    private static final Logger logger = LoggerFactory.getLogger(PacketTCP.class);
 
     private String portLocal;
     private String portRemote;
@@ -40,6 +45,7 @@ public class PacketTCP implements IConstants {
     }
 
     public PacketTCP(String stream) {
+        logger.debug(stream);
         int initial = 0, last = NUM_BITS_MAX_PORT;
         this.portLocal = stream.substring(initial, last);
 

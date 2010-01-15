@@ -21,9 +21,11 @@ public interface IConstants {
 
     public static final int NUM_BITS_MAX_WINDOW = 4;
 
+     public static final int NUM_BITS_FLAGS = 4;
+
 
      public static final int NUM_BITS_HEADER = NUM_BITS_MAX_ACKNUMBER +
              2*NUM_BITS_MAX_PORT + NUM_BITS_MAX_SEQNUMBER +
-             NUM_BITS_MAX_WINDOW;
+             NUM_BITS_MAX_WINDOW + NUM_BITS_FLAGS;
 
 }
