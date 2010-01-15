@@ -339,8 +339,6 @@ public class DataLink1 extends DataLink {
         }
         InterlayerData aux = new InterlayerData(msg.size() * BITSDADOS);
 
-        logger.info("Recuperando mensagem...");
-
         for (int i = 0; i < msg.size(); i++) {
             if (!verificaCRC(msg.get(i))) {
                 logger.warn("Erro na verificação de CRC - mensagem perdida.");
@@ -487,13 +485,9 @@ public class DataLink1 extends DataLink {
             mensagemReceivedAtual.add(data);
             logger.info("Quadro de dados final recebido. Recuperando mensagem...");
             InterlayerData msg = recuperaMensagem(mensagemReceivedAtual);
-            if (msg == null) {
-                logger.warn("Erro na recuperação da mensagem recebida.");
-                logger.warn("Mensagem descartada.");
-            } else {
-                logger.info("Mensagem recuperada com sucesso e enviada para a Rede.");
+            if (msg != null)
                 bubbleUp(msg, mac);
-            }
+
             mensagemReceivedAtual.clear();
             mensagemASerRecebida = false;
             /**
