@@ -22,6 +22,8 @@ public class Machine {
     public DataLink datalink[];
     public CheaterPhysicalLayer physical[];
 
+    public int ips[];
+
     public void doAttachs() {
         for (int i = 0; i < physical.length; ++i) {
             physical[i].attach(datalink[i]);
