@@ -32,4 +32,32 @@ public class Ring {
         return machines[machine].datalink[dataLinkIds[machine]];
     }
 
+    /**
+     * Stand back, doing black magic here.
+     *
+     * @param machine
+     * @return
+     */
+    public int getIp (int machine) {
+        return machines[machine].ips[dataLinkIds[machine]];
+    }
+
+    public int[] getExternalIps (int machine) {
+        int result[] = new int[machines[machine].ips.length - 1];
+        int internalIp = getIp(machine);
+
+        int i = 0, j = 0;
+        while (i < machines[machine].ips.length) {
+
+            if (machines[machine].ips[i] != internalIp) {
+                result[j] = machines[machine].ips[i];
+                ++j;
+            }
+
+            ++i;
+        }
+
+        return result;
+    }
+
 }

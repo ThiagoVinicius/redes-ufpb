@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -42,6 +43,8 @@ public class DefaultTest extends TestCase {
 
         Properties config = new Properties();
         config.load(new FileInputStream("topology.properties"));
+        Properties routeTable = new Properties();
+        routeTable.load(new FileInputStream("routetable.properties"));
 
         Machine machines[] = new Machine[new Integer(config.getProperty("machine.count"))];
         Ring networks[] = new Ring[new Integer(config.getProperty("ring.count"))];
@@ -56,6 +59,8 @@ public class DefaultTest extends TestCase {
         configureCheaterPhysicals(machines, config);
         configureCheaterDataLinks(networks, machines, config);
         configureCheaterNetworks(machines);
+        configureRouteAndArpTables(networks, machines, routeTable);
+
 
         for (Machine i : machines) {
             i.doStarts();
@@ -112,6 +117,7 @@ public class DefaultTest extends TestCase {
             ipArray[i] = new Integer(topology.getProperty(networkPrefix+"ip."+(i+1)));
         }
 
+        machine.ips = ipArray;
         machine.network = getNetworkLayer(machineId, machine.datalink, ipArray);
 
     }
@@ -229,6 +235,59 @@ public class DefaultTest extends TestCase {
 
     }
 
+    private void configureRouteAndArpTables(Ring[] networks, Machine[] machines, Properties routeTable) {
+
+        for (int i = 0; i < machines.length; ++i) {
+
+            String rawConfig = routeTable.getProperty(String.format("machine.%d.routes", (i+1)));
+            
+            String allRoutes[] = rawConfig.split("[,]");
+            Machine machine = machines[i];
+
+            for (String route : allRoutes) {
+                if (route.length() > 0) {
+                    String splitRoute[] = route.split("[-][>]");
+                    int local_ip = new Integer(splitRoute[0]);
+                    int remote_ip = new Integer(splitRoute[1]);
+                    machine.network.putRouteEntry(local_ip, remote_ip);
+                }
+            }
+
+            String defRoute = routeTable.getProperty(String.format("machine.%d.defaultroute", (i+1)));
+
+            machine.network.putDefaultRoute(new Integer(defRoute));
+
+        }
+
+        for(int i = 0; i < networks.length; ++i) {
+            Ring curRing = networks[i];
+
+            for (int j = 0; j < curRing.machines.length; ++j) {
+
+                Machine curMachine = curRing.machines[j];
+                Network network = curMachine.network;
+
+//                for(Machine curGateway : gateways) {
+//                    for (int ip : curGateway.ips) { //adiciona todos os ips de todos os gateways
+//                        network.putRouteEntry(ip);
+//                    }
+//                }
+
+                int dl_id = curRing.dataLinkIds[j];
+
+                //adiciona entradas arp, para o anel atual
+                for (int k = 0; k < curRing.machines.length; ++k) {
+                    DataLink dl = curRing.getDataLink(k);
+                    int ip = curRing.getIp(k);
+
+                    network.putArpEntry(ip, dl_id, dl.getMac());
+                    network.putRouteEntry(ip, ip);
+                }
+
+            }
+        }
+    }
+
     public InterNetwork interNetwork;
 
     public CheaterPhysicalLayer getPhysicalLayer(int id) {
@@ -245,6 +304,15 @@ public class DefaultTest extends TestCase {
 
     public Transport getTransportLayer(int machineId, Network downLayer) {
         return new CheaterTransport(downLayer, 10, 50);
+    }
+
+    private static int linearSearch (int array[], int value) {
+        for (int i = 0; i < array.length; ++i) {
+            if (array[i] == value) {
+                return i;
+            }
+        }
+        return -1;
     }
 
 }

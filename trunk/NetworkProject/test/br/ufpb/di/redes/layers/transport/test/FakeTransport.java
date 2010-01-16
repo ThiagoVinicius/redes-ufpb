@@ -28,9 +28,9 @@ public class FakeTransport extends Transport {
         }
     }
 
-    public FakeTransport(Network downLayer, LinkedBlockingQueue<ReceivedMessage> received) {
+    public FakeTransport(Network downLayer) {
         super(downLayer);
-        this.received = received;
+        this.received = new LinkedBlockingQueue<ReceivedMessage>();
     }
 
     public LinkedBlockingQueue<ReceivedMessage> received;
