@@ -263,4 +263,40 @@ public abstract class Network extends Layer<Transport, DataLink> {
      */
     public abstract int getIp();
 
+    /**
+     * Adiciona entrada a tabela arp, associando um determinado ip a um par
+     * de identificador de datalink e respectivo mac.
+     * <p/>
+     * <b>ATENCAO: </b> a implementacao padrao FAZ NADA e retorna imediatamente.
+     *
+     *
+     */
+    public void putArpEntry(int ip, int datalinkId, int mac) {
+    }
+
+    /**
+     * Adiciona um gateway a tabela de rota.
+     * <p/>
+     * <b>ATENCAO: </b> a implementacao padrao FAZ NADA e retorna imediatamente.
+     *
+     *
+     * @param endereco do gateway na rede local.
+     * @param endereco do gateway na rede remota.
+     *
+     */
+    public void putRouteEntry (int local_ip, int remote_ip) {
+    }
+
+    /**
+     * "Seta" rota padrao
+     * <p/>
+     * <b>ATENCAO: </b> a implementacao padrao FAZ NADA e retorna imediatamente.
+     *
+     *
+     * @param endereco do gateway na rede local.
+     */
+    public void putDefaultRoute (int local_ip) {
+
+    }
+
 }
