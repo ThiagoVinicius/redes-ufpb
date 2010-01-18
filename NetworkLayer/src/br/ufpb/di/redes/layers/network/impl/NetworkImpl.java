@@ -5,6 +5,8 @@ import br.ufpb.di.redes.layers.all.InterlayerData;
 import br.ufpb.di.redes.layers.datalink.interfaces.DataLink;
 import br.ufpb.di.redes.layers.network.impl.tables.Table;
 import br.ufpb.di.redes.layers.network.interfaces.Network;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -19,6 +21,8 @@ public class NetworkImpl extends Network {
     
     private int [] source_ips;
     public final int SMALLER_DATALINK_MAX_PACKET_SIZE;
+
+
 
     /**
      * PATERN_IP_POSITION - Usado para quando nenhum dos meus IPs concincidir com o IP recebido de cima
@@ -37,14 +41,12 @@ public class NetworkImpl extends Network {
             return value;
         }
     }
-
-    public enum MyTables{ARP_TABLE, ROUTE_TABLE}
     
-    /**
-     * Chave - Rede
-     * Valor - Ip de quem envia para essa rede
+     /**
+     * Chave - Rede ou Estacao
+     * Valor - Ip de quem envia para essa rede ou estacao
      */
-    private Table route_table = new Table();
+    private Map <Integer,Integer> route_table= new HashMap<Integer,Integer>();
 
     /**
      * Chave - Ip
@@ -92,6 +94,10 @@ public class NetworkImpl extends Network {
         bubbleUp(dataToTransport, source_ip);//manda para cima
     }
 
+    //Recebe de tansporte e devo passar pra enlace
+    //Algoritmo:
+    //
+
     @Override
     protected void processSentData(InterlayerData data, int dest_ip) {
         //Array de bits suficiente para anexar o nosso cebecalho
@@ -100,14 +106,18 @@ public class NetworkImpl extends Network {
         //Coloca o endereco destino no arrays de bits que sera enviado para o enlace
         int source_ip = getIp(dest_ip);
         
+        //Obs: Erro, tem q procurar para onde ENVIAR se o Ip não for minha rede por exemplo
+
         //Adiciona os respectivos IPs origem e destino
         dataToDataLink.putInfo(0, Constants.NETWORK_FULL_ADDRESS_SIZE.getValue(), source_ip);
         dataToDataLink.putInfo(Constants.NETWORK_FULL_ADDRESS_SIZE.getValue(), Constants.NETWORK_FULL_ADDRESS_SIZE.getValue(), dest_ip);
 
         //Copia dos bits
         InterlayerData.copyBits(dataToDataLink, data, 0, data.length, Constants.HEADER_LENGHT.getValue());
-        
-        bubbleDown(dataToDataLink, arp_table.get(getIp(dest_ip), dest_ip), getIdDataLink(source_ip));
+        int datalink_id=getIdDatalinkFromIp(source_ip);
+        int dest_mac=getMacToSendToIp(dest_ip, datalink_id);//Obtem o mac para onde enviar o determinado IP
+        //Msn ideia mas, getMacFromIp
+        bubbleDown(dataToDataLink,dest_mac,datalink_id);
     }
 
     @Override
@@ -213,15 +223,18 @@ public class NetworkImpl extends Network {
         int my_ip = getIpFromDataLinkId(id_dataLink);
         int my_network = splitIP(my_ip)[0];
 
-        int map_size = route_table.sizeMap(my_ip);
+        //int map_size = route_table.sizeMap(my_ip);
+        //Comecado a modificacao
+        int map_size =route_table.size();
 
         //O maximo de loops que eu darei sera o tamanho da tabela. Evita loop infinito!
         for(int i = 0; i < map_size; i++){
-            int ip_sender = route_table.get(my_ip, network_dest);
+            //int ip_sender = route_table.get(my_ip, network_dest);
+            int ip_sender = getInRouteTable(network_dest);
             int network_sender = splitIP(ip_sender)[0];
 
-            if(network_sender == my_network)
-                return arp_table.get(my_ip, ip_sender);
+            if(network_sender == my_network||ip_sender==my_ip)
+                return arp_table.get(my_ip, ip_sender);//Retorna o MAC e ip_sender(quem envia para ip_dest)
 
             network_dest = splitIP(ip_sender)[0];
         }
@@ -261,58 +274,96 @@ public class NetworkImpl extends Network {
     /**
      * Seta os valores em uma das tabelas.
      *
-     * @param table a tabela a ser adicionado os valores
      * @param my_ip o ip correspondente a tabela. Se nao existir tabela para esse ip, uma nova sera criada.
      * @param key a chave na tabela correspondente ao ip passado como argumento
      * @param value o valor correspondente 'a chave na tabela correspondente ao ip passado como argumento
      */
-    public void setInTable(MyTables table, int my_ip, int key, int value){
-        switch(table){
-            case ARP_TABLE: arp_table.set(my_ip, key, value); break;
-            case ROUTE_TABLE: route_table.set(my_ip, key, value); break;
-        }
+    public void setInTable(int my_ip, int key, int value){
+
+         arp_table.set(my_ip, key, value);
+            //case ROUTE_TABLE: route_table.set(my_ip, key, value); break;
+      
     }
 
     /**
      * Remove o par chave/valor da tabela do ip passado como argumento.
      *
-     * @param table a tabela a ser adicionado os valores
      * @param my_ip o ip correspondente a tabela.
      * @param key a chave na tabela correspondente ao ip passado como argumento
      *
      * @return o valor removido ou -1 se nao existia
      */
-    public int removeInTable(MyTables table, int my_ip, int key){
+    public int removeInTable(int my_ip, int key){
+
         int value = -1;
 
-        switch(table){
-            case ARP_TABLE: value = arp_table.remove(my_ip, key); break;
-            case ROUTE_TABLE: value = route_table.remove(my_ip, key); break;
-        }
-
+        value = arp_table.remove(my_ip, key);
+        //case ROUTE_TABLE: value = route_table.remove(my_ip, key); break;
+      
         return value;
     }
 
     /**
      * Retorna o valor da tabela do ip passado como argumento.
      *
-     * @param table a tabela a ser adicionado os valores
      * @param my_ip o ip correspondente a tabela.
      * @param key a chave na tabela correspondente ao ip passado como argumento
      *
      * @return o valor ou -1 se nao existia
      */
-    public int getInTable(MyTables table, int my_ip, int key){
+    public int getInTable( int my_ip, int key){
         int value = -1;
 
-        switch(table){
-            case ARP_TABLE: value = arp_table.get(my_ip, key); break;
-            case ROUTE_TABLE: value = route_table.get(my_ip, key); break;
-        }
+
+        value = arp_table.get(my_ip, key);
+            //case ROUTE_TABLE: value = route_table.get(my_ip, key); break;
 
         return value;
     }
+    /**
+     * Retorna o ip (sender) que envia para o ip passado como parâmetro.
+     *
+     * @param to_send_ip ip a cujo enviador será buscado na tabela
+     *
+     * @return o ip caso o mesmo sejá encontrado ou -1 caso contrário
+     */
+    public int getInRouteTable(int to_send_ip){
 
+        //Se encontramos a chave retornamos a mesma caso contrario returnamos -1
+        if(route_table.containsKey(to_send_ip))
+            return route_table.get(to_send_ip);//Retorna que envia para o determinado IP
 
+        return -1;
+    }
+
+    /**
+     * Altera a rota passada como parametro ou adiciona, caso a rota nao existe
+     *
+     * @param to_send_ip no caso o meu ip
+     * @param dest_ip ip responsavel por enviar ao ip to_se
+     *
+     */
+    public void setInRouteTable(int to_send_ip, int dest_ip){
+        route_table.put(to_send_ip, dest_ip);
+    }
+
+    /**
+     *
+     * Obtem o identificador do enlace dado o ip
+     *
+     * @param source_ip
+     *
+     * @return o identificador do enlace
+     */
+    private int getIdDatalinkFromIp(int source_ip) {
+        for(int i=0;i<source_ips.length;i++){
+
+            if(source_ips[i]==source_ip)
+                return i;
+
+        }
+
+        return Constants.PATERN_IP_POSITION.getValue();
+    }
 
 }
