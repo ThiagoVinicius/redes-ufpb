@@ -153,4 +153,14 @@ public abstract class Transport extends Layer<NullLayer, Network> {
 
     protected abstract void put (Connection con, byte b);
 
+
+    /**
+     * Repassa um byte para a conexao especificada.
+     * @param whereTo
+     * @param b
+     */
+    protected void bubbleUp (Connection whereTo, int b) {
+        whereTo.bubbleUp(b);
+    }
+
 }
