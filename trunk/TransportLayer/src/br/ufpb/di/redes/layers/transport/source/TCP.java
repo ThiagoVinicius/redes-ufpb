@@ -10,8 +10,8 @@ import br.ufpb.di.redes.layers.network.interfaces.Network;
 import br.ufpb.di.redes.layers.transport.interfaces.Connection;
 import br.ufpb.di.redes.layers.transport.interfaces.Transport;
 import br.ufpb.di.redes.layers.transport.interfaces.UnnableToConnectException;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Hashtable;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,19 +23,31 @@ import org.slf4j.LoggerFactory;
 public class TCP extends Transport implements IConstants {
     
     private static final Logger logger = LoggerFactory.getLogger(TCP.class);
-    private int source_ip;
-    private int local_port = 0;
-    private PacketTCP lastReceivedPacket;
 
-    ThreeWaysHandshake handshake = new ThreeWaysHandshake();
-    //List container = new LinkedList<ToReceiveMessage>();
-    ArrayBlockingQueue container = new ArrayBlockingQueue<ToReceiveMessage>(1);
+    private int source_ip;
+    private int local_port;
+
+    private PacketTCP lastReceivedPacket;
+    
+    private boolean closeReply = false;
+
+    private Map<Integer, Connection> conexoes;
+    private static int connectiID;
+
+    private ThreeWaysHandshake handshake = new ThreeWaysHandshake();
+    private ArrayBlockingQueue container = new ArrayBlockingQueue<ToReceiveMessage>(1);
+
 
     public TCP(Network downLayer, int source_ip) {
         super(downLayer);
         this.source_ip = source_ip;
+        conexoes = new Hashtable<Integer, Connection>();
     }
 
+
+    /**
+     * Classe interna que servira' para encapsular data + ip.
+     */
      private static class ToReceiveMessage {
         public final InterlayerData data;
         public final int source_ip;
@@ -45,13 +57,39 @@ public class TCP extends Transport implements IConstants {
         }
     }
 
+
+     /**
+      * Metodo que recebe os dados da camada de rede.
+      *
+      * @param data Dados provinientes da camada de rede.
+      * @param source_ip IP local.
+      */
     @Override
     protected void processReceivedData(InterlayerData data, int source_ip) {
+
         ToReceiveMessage receive = new ToReceiveMessage(data, source_ip);
-        //container.add(0, receive);
         container.add(receive);
+        
+        String chainBit = Integer.toBinaryString(data.data[0]);
+        char fin = chainBit.charAt(23);
+        if(fin == '1') {
+            //aqui pegara' uma conexao na tabela
+            close(new Connection(0, 0, 0, 0, null));
+            closeReply = true;
+        }
+
     }
 
+
+    /**
+     * Ira' executar o connect usando o Handshake de 3 vias, onde utilizara'
+     * a primeira e terceira via do handshake.
+     *
+     * @param dest_ip IP remoto.
+     * @param remote_port Porta remota.
+     * @return Conexao estabelecida.
+     * @throws UnnableToConnectException Lancara' caso nao ocorra conexao
+     */
     @Override
     public Connection connect(int dest_ip, int remote_port) throws UnnableToConnectException {
         
@@ -66,122 +104,138 @@ public class TCP extends Transport implements IConstants {
         
         initialTime = System.currentTimeMillis();
 
-        
 
         while( container.size() == 0 ) {
-            //logger.debug("connect-");
             finalTime = System.currentTimeMillis();
             if( ( finalTime - initialTime ) > TIME_OUT_CONNECTION ) {
                 throw new UnnableToConnectException();
             }
         }
 
+
         ToReceiveMessage message = (ToReceiveMessage) container.poll();
 
         String dataReceived = parseIntToString(message.data.data[0], NUM_BITS_HEADER);
 
         PacketTCP packetReceived = new PacketTCP(dataReceived);
-
-
         PacketTCP thirdWay = handshake.thirdWay(dest_ip, remote_port, packetReceived);
-        String dataHeaderThirdWay = thirdWay.toString();
-        InterlayerData dataThirdWay = new InterlayerData(dataHeaderThirdWay.length());
 
+        String dataHeaderThirdWay = thirdWay.toString();
+
+        InterlayerData dataThirdWay = new InterlayerData(dataHeaderThirdWay.length());
         dataThirdWay.data[0] = parseStringToInt(dataHeaderThirdWay);
 
         bubbleDown(dataThirdWay, dest_ip);
 
+        logger.debug("Conexao estabelecida!");
+
         return new Connection(local_port, remote_port, source_ip, dest_ip, this);
     }
 
+
+    /**
+     * Ira' executar o listen usando o Handshake de 3 vias, onde utilizara'
+     * a segunda via do handshake.
+     *
+     * @param local_port Porta local.
+     * @return Conexao estabelecida.
+     */
     @Override
     @SuppressWarnings("empty-statement")
     public Connection listen(int local_port) {
         
         PacketTCP packetReceived;
-        ToReceiveMessage message = null;
-
-        logger.debug("entrei no listen");
+        ToReceiveMessage message;
 
         do {
             while( (container.size() == 0 ));
-
-            logger.debug("listen-");
             
             message = (ToReceiveMessage) container.poll();
-
             String dataReceived = parseIntToString(message.data.data[0], NUM_BITS_HEADER);
 
-            //logger.debug(dataReceived);
-            
             packetReceived = new PacketTCP(dataReceived);
+
         } while( !packetReceived.getPortLocal().
                 equals(parseIntToString(local_port, NUM_BITS_MAX_PORT)) );
 
         PacketTCP secondWay = handshake.secondWay(local_port,
                 parseStringToInt(packetReceived.getPortLocal()), packetReceived);
         String dataHeaderSecondWay = secondWay.toString();
-        InterlayerData dataSecondWay = new InterlayerData(dataHeaderSecondWay.length());
 
+        InterlayerData dataSecondWay = new InterlayerData(dataHeaderSecondWay.length());
         dataSecondWay.data[0] = parseStringToInt(dataHeaderSecondWay);
 
         bubbleDown(dataSecondWay, message.source_ip);
         
-        logger.debug("Conexao estabelecida!");
-
         return new Connection(local_port, parseStringToInt(packetReceived.getPortRemote()),
                 source_ip, message.source_ip, this);
     }
 
+
+    /**
+     * Metodo que encerra a conexao, onde tera um bloco if-else que dividira'
+     * o transmissor e receptor do disconnect request.
+     *
+     * @param connection Conexao a qual sera' encerrada.
+     */
     @Override
     @SuppressWarnings("empty-statement")
     protected void close(Connection connection) {
-        throw new UnsupportedOperationException("Not supported yet.");
-//        PairOfTwoWaysHandshake handshakeClose = new PairOfTwoWaysHandshake();
-//        ToReceiveMessage message = null;
-//
-//        // tera algo aqui no if, ate' que nao tenha decidido fica a estrutura
-//        if(true) {
-//
-//            long initialTime = System.currentTimeMillis();
-//            long finalTime = 0;
-//
-//            PacketTCP firstWay = handshakeClose.firstWay(lastReceivedPacket);
-//
-//            String dataHeaderFirstWay = firstWay.toString();
-//            InterlayerData dataFirstWay = new InterlayerData(dataHeaderFirstWay.length());
-//
-//            dataFirstWay.data[0] = parseStringToInt(dataHeaderFirstWay);
-//
-//            bubbleDown(dataFirstWay, connection.destIp);
-//
-//            // ver o fato se ainda esta' recebendo dados
-//            while( (container.size() == 0 ));
-//
-//            message = (ToReceiveMessage) container.poll();
-//
-//            String dataReceived = parseIntToString(message.data.data[0], NUM_BITS_HEADER);
-//
-//            PacketTCP fourthWay = handshakeClose.fourthWay(new PacketTCP(dataReceived));
-//
-//            String dataHeaderFourthWay = fourthWay.toString();
-//            InterlayerData dataFourthWay = new InterlayerData(dataHeaderFourthWay.length());
-//
-//            dataFirstWay.data[0] = parseStringToInt(dataHeaderFourthWay);
-//
-//            bubbleDown(dataFourthWay, connection.destIp);
-//
-//            while( finalTime < MAXIMUM_SEGMENT_LIFETIME ) {
-//                finalTime = System.currentTimeMillis() - initialTime;
-//            }
-//
-//            connection.close();
-//
-//        }
-//        else {
-//        //    packet = handshakeClose.secondWay(packet);
-//        //    packet = handshakeClose.thirdWay(packet);
-//        }
+        //throw new UnsupportedOperationException("Not supported yet.");
+        ThreeWaysHandshakeClose handshakeClose = new ThreeWaysHandshakeClose();
+        ToReceiveMessage message;
+
+        // aqui solicita o disconnect request
+        if(!closeReply) {
+            PacketTCP firstWay = handshakeClose.firstWay(lastReceivedPacket);
+            String dataHeaderFirstWay = firstWay.toString();
+
+            InterlayerData dataFirstWay = new InterlayerData(dataHeaderFirstWay.length());
+            dataFirstWay.data[0] = parseStringToInt(dataHeaderFirstWay);
+
+            bubbleDown(dataFirstWay, connection.destIp);
+
+
+            // ver o fato se ainda esta' recebendo dados
+            while( (container.size() == 0 ));
+
+
+            message = (ToReceiveMessage) container.poll();
+            String dataReceived = parseIntToString(message.data.data[0], NUM_BITS_HEADER);
+
+            PacketTCP thirdWay = handshakeClose.thirdWay(new PacketTCP(dataReceived));
+            String dataHeaderThirdWay = thirdWay.toString();
+
+            InterlayerData dataThirdWay = new InterlayerData(dataHeaderThirdWay.length());
+            dataFirstWay.data[0] = parseStringToInt(dataHeaderThirdWay);
+
+            // encerrar conexao
+
+            bubbleDown(dataThirdWay, connection.destIp);
+        }
+
+        else {
+            long initialTime = System.currentTimeMillis();
+            long finalTime = 0;
+
+            PacketTCP secondWay = handshakeClose.secondWay(lastReceivedPacket);
+
+            String dataHeaderSecondWay = secondWay.toString();
+            InterlayerData dataSecondWay = new InterlayerData(dataHeaderSecondWay.length());
+
+            dataSecondWay.data[0] = parseStringToInt(dataHeaderSecondWay);
+
+            bubbleDown(dataSecondWay, connection.destIp);
+
+            while( finalTime < MAXIMUM_SEGMENT_LIFETIME ) {
+                finalTime = System.currentTimeMillis() - initialTime;
+            }
+
+            closeReply = false;
+
+            // encerrar conexao
+        }
+
     }
 
     @Override
@@ -203,7 +257,8 @@ public class TCP extends Transport implements IConstants {
     public int maxPacketSize() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-    
+
+
     /**
      * Dado uma cadeia de string de 0s e 1s, ira' retornar um inteiro.
      *
@@ -212,16 +267,9 @@ public class TCP extends Transport implements IConstants {
      */
      private int parseStringToInt( String value ) {
 
-         int valueInt = 0;
-         int base = 1;
-
-         for(int c = value.length()-1; c >= 0; c--) {
-             valueInt += (value.charAt(c)-'0') * base;
-             base *= 2;
-         }
-
-         return valueInt;
+        return Integer.parseInt(value, 2);
      }
+
 
     /**
       * Transforma um numero inteiro para um string, especificando o numero de
@@ -234,22 +282,11 @@ public class TCP extends Transport implements IConstants {
       */
      private String parseIntToString( int value, int numBit ) {
 
-         /*
-         if ( value > (Math.pow(2, numBit)-1) ) {
-             throw new IllegalArgumentException("O valor estoura o numero de bits!");
-         }
-         */
-
          while ( value > (Math.pow(2, numBit)-1) ) {
              value = value - (int) (Math.pow(2, numBit));
          }
 
-         String string = "";
-
-         while(value > 0 ) {
-            string = (value % 2) + string;
-            value /= 2;
-         }
+         String string = Integer.toBinaryString(value);
 
          if(string.length() < numBit) {
              int addBit = numBit - string.length();

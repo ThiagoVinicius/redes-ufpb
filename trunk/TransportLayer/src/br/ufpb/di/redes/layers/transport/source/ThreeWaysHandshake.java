@@ -123,15 +123,7 @@ public class ThreeWaysHandshake implements IConstants {
      */
      private int parseStringToInt( String value ) {
 
-         int valueInt = 0;
-         int base = 1;
-
-         for(int c = value.length()-1; c >= 0; c--) {
-             valueInt += (value.charAt(c)-'0') * base;
-             base *= 2;
-         }
-
-         return valueInt;
+        return Integer.parseInt(value, 2);
      }
 
      /**
@@ -155,12 +147,7 @@ public class ThreeWaysHandshake implements IConstants {
              value = value - (int) (Math.pow(2, numBit));
          }
 
-         String string = "";
-
-         while(value > 0 ) {
-            string = (value % 2) + string;
-            value /= 2;
-         }
+         String string = Integer.toBinaryString(value);
 
          if(string.length() < numBit) {
              int addBit = numBit - string.length();

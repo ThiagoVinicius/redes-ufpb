@@ -12,9 +12,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author Jailton
  */
-public class PairOfTwoWaysHandshake implements IConstants {
+public class ThreeWaysHandshakeClose implements IConstants {
 
-    private static final Logger logger = LoggerFactory.getLogger(PairOfTwoWaysHandshake.class);
+    private static final Logger logger = LoggerFactory.getLogger(ThreeWaysHandshakeClose.class);
 
 
     public PacketTCP firstWay( PacketTCP packet ) {
@@ -39,7 +39,7 @@ public class PairOfTwoWaysHandshake implements IConstants {
         int plus = parseStringToInt(packet.getSequenceNumber()) + 1;
         packetOut.setAckNumber( parseIntToString(plus, NUM_BITS_MAX_ACKNUMBER) );
 
-        packetOut.setFINFlag("0");
+        packetOut.setFINFlag("1");
         packetOut.setACKFlag("1");
 
         return packetOut;
@@ -53,24 +53,10 @@ public class PairOfTwoWaysHandshake implements IConstants {
         int plus = parseStringToInt(packet.getSequenceNumber()) + 1;
         packetOut.setAckNumber( parseIntToString(plus, NUM_BITS_MAX_ACKNUMBER) );
 
-        packetOut.setFINFlag("1");
-        packetOut.setACKFlag("0");
-
-        return packetOut;
-    }
-
-    public PacketTCP fourthWay( PacketTCP packet ) {
-
-        PacketTCP packetOut = new PacketTCP( packet.getPortRemote(), packet.getPortLocal(), "" );
-
-        packetOut.setSequenceNumber(packet.getAckNumber());
-        int plus = parseStringToInt(packet.getSequenceNumber()) + 1;
-        packetOut.setAckNumber( parseIntToString(plus, NUM_BITS_MAX_ACKNUMBER) );
-
         packetOut.setFINFlag("0");
         packetOut.setACKFlag("1");
 
-        return packet;
+        return packetOut;
     }
 
 
@@ -82,17 +68,10 @@ public class PairOfTwoWaysHandshake implements IConstants {
      */
      private int parseStringToInt( String value ) {
 
-         int valueInt = 0;
-         int base = 1;
-
-         for(int c = value.length()-1; c >= 0; c--) {
-             valueInt += (value.charAt(c)-'0') * base;
-             base *= 2;
-         }
-
-         return valueInt;
+        return Integer.parseInt(value, 2);
      }
 
+     
      /**
       * Transforma um numero inteiro para um string, especificando o numero de
       * bits dessa cadeia, caso o valor seja maior que o numero de bits, ira'
@@ -114,12 +93,7 @@ public class PairOfTwoWaysHandshake implements IConstants {
              value = value - (int) (Math.pow(2, numBit));
          }
 
-         String string = "";
-
-         while(value > 0 ) {
-            string = (value % 2) + string;
-            value /= 2;
-         }
+         String string = Integer.toBinaryString(value);
 
          if(string.length() < numBit) {
              int addBit = numBit - string.length();
