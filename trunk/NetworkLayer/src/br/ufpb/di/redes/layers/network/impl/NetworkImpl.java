@@ -46,7 +46,7 @@ public class NetworkImpl extends Network {
      * Chave - Rede ou Estacao
      * Valor - Ip de quem envia para essa rede ou estacao
      */
-    private Map <Integer,Integer> route_table= new HashMap<Integer,Integer>();
+    private Map <Integer, Integer> route_table = new HashMap<Integer, Integer>();
 
     /**
      * Chave - Ip
@@ -278,7 +278,7 @@ public class NetworkImpl extends Network {
      * @param key a chave na tabela correspondente ao ip passado como argumento
      * @param value o valor correspondente 'a chave na tabela correspondente ao ip passado como argumento
      */
-    public void setInTable(int my_ip, int key, int value){
+    public void setInArpTable(int my_ip, int key, int value){
 
          arp_table.set(my_ip, key, value);
             //case ROUTE_TABLE: route_table.set(my_ip, key, value); break;
@@ -364,6 +364,11 @@ public class NetworkImpl extends Network {
         }
 
         return Constants.PATERN_IP_POSITION.getValue();
+    }
+
+    @Override
+    public String getName(){
+        return getIp() + "";
     }
 
 }
