@@ -10,9 +10,9 @@ import br.ufpb.di.redes.layers.network.interfaces.Network;
 import br.ufpb.di.redes.layers.transport.interfaces.Connection;
 import br.ufpb.di.redes.layers.transport.interfaces.Transport;
 import br.ufpb.di.redes.layers.transport.interfaces.UnnableToConnectException;
-import java.util.Hashtable;
-import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,18 +30,20 @@ public class TCP extends Transport implements IConstants {
     private PacketTCP lastReceivedPacket;
     
     private boolean closeReply = false;
+    private boolean timeoutPut = false;
 
-    private Map<Integer, Connection> conexoes;
-    private static int connectiID;
+    private HashMap<Integer, Connection> conexoes;
+    private static int connectID;
 
     private ThreeWaysHandshake handshake = new ThreeWaysHandshake();
     private ArrayBlockingQueue container = new ArrayBlockingQueue<ToReceiveMessage>(1);
+    private LinkedBlockingQueue listBytes = new LinkedBlockingQueue();
 
 
     public TCP(Network downLayer, int source_ip) {
         super(downLayer);
         this.source_ip = source_ip;
-        conexoes = new Hashtable<Integer, Connection>();
+        conexoes = new HashMap<Integer, Connection>();
     }
 
 
@@ -74,8 +76,8 @@ public class TCP extends Transport implements IConstants {
         char fin = chainBit.charAt(23);
         if(fin == '1') {
             //aqui pegara' uma conexao na tabela
-            close(new Connection(0, 0, 0, 0, null));
             closeReply = true;
+            close(new Connection(0, 0, 0, 0, null));
         }
 
     }
@@ -238,6 +240,14 @@ public class TCP extends Transport implements IConstants {
 
     }
 
+//    public void send(Connection con) {
+//        PacketTCP packet = new PacketTCP(parseIntToString(con.localPort, NUM_BITS_MAX_PORT),
+//                parseIntToString(con.remotePort, source_ip), "");
+//        packet.setSequenceNumber(lastReceivedPacket.getAckNumber());
+//        int plus = parseStringToInt(lastReceivedPacket.getSequenceNumber()) + 1;
+//        packet.setAckNumber( parseIntToString(plus, NUM_BITS_MAX_ACKNUMBER) );
+//    }
+
     @Override
     protected boolean isActive(Connection con) {
         throw new UnsupportedOperationException("Not supported yet.");
@@ -245,7 +255,119 @@ public class TCP extends Transport implements IConstants {
 
     @Override
     protected void put(Connection con, byte b) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        String chainBytes = "";
+        timeoutPut = true;
+
+        listBytes.add(b);
+        
+        if( minPacketSize() > (listBytes.size() + NUM_BITS_HEADER/8) ) {
+
+            if(maxPacketSize() == listBytes.size()) {
+                for(int c = 0; c < listBytes.size(); c++) {
+                    int num = (Integer)listBytes.poll();
+                    String bytes = parseIntToString(num, 8);
+                    chainBytes = bytes + chainBytes;
+                }
+
+                PacketTCP packet = new PacketTCP(parseIntToString(con.localPort, NUM_BITS_MAX_PORT),
+                        parseIntToString(con.remotePort, source_ip), "");
+                packet.setSequenceNumber(lastReceivedPacket.getAckNumber());
+                int plus = parseStringToInt(lastReceivedPacket.getSequenceNumber()) + 1;
+                packet.setAckNumber( parseIntToString(plus, NUM_BITS_MAX_ACKNUMBER) );
+                packet.setData(chainBytes);
+
+                String completePacket = packet.toString();
+                InterlayerData dataPacket = new InterlayerData(completePacket.length());
+
+                int numOfData = completePacket.length()/32;
+                int initial = 0, last = 8;
+
+                for(int c = 0; c < numOfData; c++) {
+                    dataPacket.data[c] = parseStringToInt(completePacket.substring(initial, last));
+                    initial = last; last = 2*last;
+                }
+
+                bubbleDown(dataPacket, con.destIp);
+            }
+
+            else {
+
+                timeoutPut = false;
+
+                long initialTime = System.currentTimeMillis();
+                long finalTime;
+                boolean outLariat = false;
+
+                while( !outLariat ) {
+                    finalTime = System.currentTimeMillis();
+
+                    if(timeoutPut) {
+                        return;
+                    }
+                    if( ( finalTime - initialTime ) > TIME_OUT_PUT ) {
+
+                        for(int c = 0; c < listBytes.size(); c++) {
+                    int num = (Integer)listBytes.poll();
+                    String bytes = parseIntToString(num, 8);
+                    chainBytes = bytes + chainBytes;
+                }
+
+                PacketTCP packet = new PacketTCP(parseIntToString(con.localPort, NUM_BITS_MAX_PORT),
+                        parseIntToString(con.remotePort, source_ip), "");
+                packet.setSequenceNumber(lastReceivedPacket.getAckNumber());
+                int plus = parseStringToInt(lastReceivedPacket.getSequenceNumber()) + 1;
+                packet.setAckNumber( parseIntToString(plus, NUM_BITS_MAX_ACKNUMBER) );
+                packet.setData(chainBytes);
+
+                String completePacket = packet.toString();
+                InterlayerData dataPacket = new InterlayerData(completePacket.length());
+
+                int numOfData = completePacket.length()/32;
+                int initial = 0, last = 8;
+
+                for(int c = 0; c < numOfData; c++) {
+                    dataPacket.data[c] = parseStringToInt(completePacket.substring(initial, last));
+                    initial = last; last = 2*last;
+                }
+
+                bubbleDown(dataPacket, con.destIp);
+
+                        timeoutPut = true;
+                    }
+                }
+
+            }
+
+        }
+
+        
+        //throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @SuppressWarnings("empty-statement")
+    public void receive(Connection con) {
+
+        PacketTCP packetReceived;
+        ToReceiveMessage message;
+
+        do {
+            while( (container.size() == 0 ));
+
+            message = (ToReceiveMessage) container.poll();
+            String dataReceived = parseIntToString(message.data.data[0], NUM_BITS_HEADER);
+
+            packetReceived = new PacketTCP(dataReceived);
+
+            int numBytes = packetReceived.getData().length()/8;
+            int initial = 0, last = 8;
+
+            for(int c = 0; c < numBytes; c++) {
+                byte num = (byte)parseStringToInt(packetReceived.getData().substring(initial, last));
+                num = (byte) (num & 0xff);
+                bubbleUp(con, num);
+            }
+
+        } while( isActive(con) );
     }
 
     @Override
