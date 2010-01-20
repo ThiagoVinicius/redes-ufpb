@@ -475,6 +475,7 @@ public class DataLink1 extends DataLink {
                 logger.warn("Erro na verificação de CRC do token. Um novo será enviado.");
                 descartaQuadros = true;
                 bubbleDown(criaTokenInicial());
+                return;
             }
 
             /** Sai do modo de descartar quadros se esse token estiver correto. */
