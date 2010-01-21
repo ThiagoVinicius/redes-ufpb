@@ -10,7 +10,6 @@ import br.ufpb.di.redes.layers.network.interfaces.Network;
 import br.ufpb.di.redes.layers.transport.interfaces.Connection;
 import br.ufpb.di.redes.layers.transport.interfaces.Transport;
 import br.ufpb.di.redes.layers.transport.interfaces.UnnableToConnectException;
-import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.slf4j.Logger;
@@ -32,8 +31,8 @@ public class TCP extends Transport implements IConstants {
     private boolean closeReply = false;
     private boolean timeoutPut = false;
 
-    private HashMap<Integer, Connection> conexoes;
-    private static int connectID;
+    private Connection connection;
+    //private static int connectID;
 
     private ThreeWaysHandshake handshake = new ThreeWaysHandshake();
     private ArrayBlockingQueue container = new ArrayBlockingQueue<ToReceiveMessage>(1);
@@ -43,7 +42,7 @@ public class TCP extends Transport implements IConstants {
     public TCP(Network downLayer, int source_ip) {
         super(downLayer);
         this.source_ip = source_ip;
-        conexoes = new HashMap<Integer, Connection>();
+        //conexoes = new HashMap<Integer, Connection>();
     }
 
 
@@ -58,6 +57,17 @@ public class TCP extends Transport implements IConstants {
             this.source_ip = source_ip;
         }
     }
+
+//     public void threads() {
+//         
+//         new Thread() {
+//            @Override
+//             public void run() {
+//                 close(connection);
+//             }
+//         }.start();
+//         
+//     }
 
 
      /**
@@ -131,7 +141,9 @@ public class TCP extends Transport implements IConstants {
 
         logger.debug("Conexao estabelecida!");
 
-        return new Connection(local_port, remote_port, source_ip, dest_ip, this);
+        connection = new Connection(local_port, remote_port, source_ip, dest_ip, this);
+
+        return connection;
     }
 
 
@@ -168,9 +180,11 @@ public class TCP extends Transport implements IConstants {
         dataSecondWay.data[0] = parseStringToInt(dataHeaderSecondWay);
 
         bubbleDown(dataSecondWay, message.source_ip);
-        
-        return new Connection(local_port, parseStringToInt(packetReceived.getPortRemote()),
+
+        connection = new Connection(local_port, parseStringToInt(packetReceived.getPortRemote()),
                 source_ip, message.source_ip, this);
+
+        return connection;
     }
 
 
@@ -240,29 +254,11 @@ public class TCP extends Transport implements IConstants {
 
     }
 
-//    public void send(Connection con) {
-//        PacketTCP packet = new PacketTCP(parseIntToString(con.localPort, NUM_BITS_MAX_PORT),
-//                parseIntToString(con.remotePort, source_ip), "");
-//        packet.setSequenceNumber(lastReceivedPacket.getAckNumber());
-//        int plus = parseStringToInt(lastReceivedPacket.getSequenceNumber()) + 1;
-//        packet.setAckNumber( parseIntToString(plus, NUM_BITS_MAX_ACKNUMBER) );
-//    }
-
-    @Override
-    protected boolean isActive(Connection con) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    protected void put(Connection con, byte b) {
+    public void send(Connection con) {
         String chainBytes = "";
         timeoutPut = true;
-
-        listBytes.add(b);
         
-        if( minPacketSize() > (listBytes.size() + NUM_BITS_HEADER/8) ) {
-
-            if(maxPacketSize() == listBytes.size()) {
+        if(maxPacketSize() == listBytes.size()) {
                 for(int c = 0; c < listBytes.size(); c++) {
                     int num = (Integer)listBytes.poll();
                     String bytes = parseIntToString(num, 8);
@@ -337,37 +333,47 @@ public class TCP extends Transport implements IConstants {
                 }
 
             }
+    }
 
+    @Override
+    protected boolean isActive(Connection con) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    protected void put(Connection con, byte b) {
+        
+        listBytes.offer(b);
+        
+        if( minPacketSize() > (listBytes.size() + NUM_BITS_HEADER/8) ) {
+            send(con);
         }
+
+           
 
         
         //throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @SuppressWarnings("empty-statement")
-    public void receive(Connection con) {
+    public void receive(Connection con) throws InterruptedException {
 
         PacketTCP packetReceived;
-        ToReceiveMessage message;
+        ToReceiveMessage message = (ToReceiveMessage) container.take();
 
-        do {
-            while( (container.size() == 0 ));
+        String dataReceived = parseIntToString(message.data.data[0], NUM_BITS_HEADER);
 
-            message = (ToReceiveMessage) container.poll();
-            String dataReceived = parseIntToString(message.data.data[0], NUM_BITS_HEADER);
+        packetReceived = new PacketTCP(dataReceived);
 
-            packetReceived = new PacketTCP(dataReceived);
+        int numBytes = packetReceived.getData().length()/8;
+        int initial = 0, last = 8;
 
-            int numBytes = packetReceived.getData().length()/8;
-            int initial = 0, last = 8;
+        for(int c = 0; c < numBytes; c++) {
+            byte num = (byte)parseStringToInt(packetReceived.getData().substring(initial, last));
+            num = (byte) (num & 0xff);
+            bubbleUp(con, num);
+        }
 
-            for(int c = 0; c < numBytes; c++) {
-                byte num = (byte)parseStringToInt(packetReceived.getData().substring(initial, last));
-                num = (byte) (num & 0xff);
-                bubbleUp(con, num);
-            }
-
-        } while( isActive(con) );
     }
 
     @Override
@@ -420,5 +426,7 @@ public class TCP extends Transport implements IConstants {
 
          return string;
      }
+
+
 
 }
