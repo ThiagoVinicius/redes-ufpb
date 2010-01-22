@@ -1,0 +1,55 @@
+#summary Inventário para a nossa rede.
+
+= Introduction =
+
+Uma lista de todo o material necessário para colocar a rede para funcionar.
+
+Itens ~~riscados~~ já estão disponíveis.
+
+
+= Details =
+
+#Para o enlace "visual"
+
+  * ~~Monitor, tela 4:3~~ (SAMSUNG SYNCMASTER 793v)
+  * Monitor, tela 4:3
+  * Monitor, tela 4:3
+
+  * ~~Webcam~~ (Microsoft VX-1000)
+  * ~~Webcam~~ (Genius NB300)
+  * ~~Webcam~~ (Genius NB300)
+
+  * ~~caixas de papelão/ispor; livros; qualquer coisa que possa ser empilhada, para colocar uma webcam no topo. ALTURA FINAL: aprox 15 cm~~
+  * caixas de papelão/ispor; livros; qualquer coisa que possa ser empilhada, para colocar uma webcam no topo. ALTURA FINAL: aprox 15 cm
+  * caixas de papelão/ispor; livros; qualquer coisa que possa ser empilhada, para colocar uma webcam no topo. ALTURA FINAL: aprox 15 cm
+
+  * ~~Laptop ou desktop que possa usar duas telas (WINDOWS XP/VISTA/7)~~ (Laptop de Thiago)
+
+
+#Para o enlace "barulho tradicional"
+  * Microfone
+  * Microfone
+  * Microfone
+
+  * Caixa de som
+  * Caixa de som
+  * Caixa de som
+
+  * Desktop (serve laptop?!) (WINDOWS XP)
+  * Desktop (serve laptop?!) (WINDOWS XP)
+
+#Para o enlace "barulho silencioso"
+  * Transmissor FM
+  * Transmissor FM
+
+  * Receptor FM (ajuste digital)
+  * Receptor FM (ajuste digital)
+
+  * Desktop (serve laptop?!) (WINDOWS)
+
+
+#Para gateway "visual" <==> "barulho tradicional"
+  * Laptop ou desktop que possa usar duas telas (WINDOWS XP)
+
+#Para gateway "visual" <==> "barulho silencioso"
+  * ~~Laptop ou desktop que possa usar duas telas (WINDOWS XP)~~ (Laptop de Amanda [confirme por favor, Amanda])
