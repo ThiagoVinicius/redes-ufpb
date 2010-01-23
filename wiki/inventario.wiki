@@ -45,7 +45,7 @@ Itens ~~riscados~~ já estão disponíveis.
   * Receptor FM (ajuste digital) 
   * Receptor FM (ajuste digital) (talvez preciso 2 mp3 daqueles que não tem display. Janduy me arrumou 2 mp4, mas estou notando que o simples piscar de um icone no display está causando um ruído no sinal FM =\\... Acabei de comprar papel alumínio para tentar "blindar", logo postarei o resultado... )
 
-  * Desktop (serve laptop?!) (WINDOWS) (Testei com laptop com windows vista e, até agora, tudo bem...)
+  * Desktop (serve laptop?!) (WINDOWS) (Testei com laptop com windows vista e, até agora, tudo bem... Acredito que com Windows XP deva ficar ainda melhor...)
 
 
 #Para gateway "visual" <==> "barulho tradicional"
