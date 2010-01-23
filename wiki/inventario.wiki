@@ -36,7 +36,7 @@ Itens ~~riscados~~ já estão disponíveis.
   * Caixa de som
 
   * ~~Desktop (UNICAMENTE!) (WINDOWS XP)~~
-  * Desktop (serve laptop?!) (WINDOWS XP)
+  * Desktop (UNICAMENTE!) (WINDOWS XP)
 
 #Para o enlace "barulho silencioso"
   * ~~Transmissor FM~~
