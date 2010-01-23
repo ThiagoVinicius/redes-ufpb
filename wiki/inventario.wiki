@@ -35,7 +35,7 @@ Itens ~~riscados~~ já estão disponíveis.
   * Caixa de som
   * Caixa de som
 
-  * ~~Desktop (UNICAMENTE!) (WINDOWS XP)~~ (Fiz testes com laptop e não funcionou)
+  * ~~Desktop (UNICAMENTE!) (WINDOWS XP)~~ (Fiz testes com laptop e não funcionou. Ass. janduy)
   * Desktop (UNICAMENTE!) (WINDOWS XP)
 
 #Para o enlace "barulho silencioso"
