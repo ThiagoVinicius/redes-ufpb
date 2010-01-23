@@ -27,15 +27,15 @@ Itens ~~riscados~~ já estão disponíveis.
 
 
 #Para o enlace "barulho tradicional"
-  * Microfone
+  * ~~Microfone~~
   * Microfone
   * Microfone
 
-  * Caixa de som
+  * ~~Caixa de som~~
   * Caixa de som
   * Caixa de som
 
-  * Desktop (serve laptop?!) (WINDOWS XP)
+  * ~~Desktop (UNICAMENTE!) (WINDOWS XP)~~
   * Desktop (serve laptop?!) (WINDOWS XP)
 
 #Para o enlace "barulho silencioso"
