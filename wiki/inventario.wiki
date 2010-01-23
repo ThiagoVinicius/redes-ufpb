@@ -35,7 +35,7 @@ Itens ~~riscados~~ já estão disponíveis.
   * Caixa de som
   * Caixa de som
 
-  * ~~Desktop (UNICAMENTE!) (WINDOWS XP)~~
+  * ~~Desktop (UNICAMENTE!) (WINDOWS XP)~~ (Fiz testes com laptop e não funcionou)
   * Desktop (UNICAMENTE!) (WINDOWS XP)
 
 #Para o enlace "barulho silencioso"
@@ -49,7 +49,7 @@ Itens ~~riscados~~ já estão disponíveis.
 
 
 #Para gateway "visual" <==> "barulho tradicional"
-  * Laptop ou desktop que possa usar duas telas (WINDOWS XP)
+  * Desktop que possa usar duas telas (WINDOWS XP)
 
 #Para gateway "visual" <==> "barulho silencioso"
   * ~~Laptop ou desktop que possa usar duas telas (WINDOWS XP)~~ (Laptop de Amanda [confirme por favor, Amanda])
