@@ -39,13 +39,13 @@ Itens ~~riscados~~ já estão disponíveis.
   * Desktop (serve laptop?!) (WINDOWS XP)
 
 #Para o enlace "barulho silencioso"
-  * Transmissor FM
-  * Transmissor FM
+  * ~~Transmissor FM~~
+  * ~~Transmissor FM~~
 
-  * Receptor FM (ajuste digital)
-  * Receptor FM (ajuste digital)
+  * Receptor FM (ajuste digital) 
+  * Receptor FM (ajuste digital) (talvez preciso 2 mp3 daqueles que não tem display. Janduy me arrumou 2 mp4, mas estou notando que o simples piscar de um icone no display está causando um ruído no sinal FM =\\... Acabei de comprar papel alumínio para tentar "blindar", logo postarei o resultado... )
 
-  * Desktop (serve laptop?!) (WINDOWS)
+  * Desktop (serve laptop?!) (WINDOWS) (Testei com laptop com windows vista e, até agora, tudo bem...)
 
 
 #Para gateway "visual" <==> "barulho tradicional"
