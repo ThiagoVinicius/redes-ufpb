@@ -30,9 +30,9 @@ public class NetworkImpl extends Network {
      */
     public enum Constants {NETWORK_LENGHT_OF_IP(2), STATION_LENGHT_OF_IP(2), 
         PATERN_IP_POSITION(0), SEQUENCY_NUMBER(2), TTL(2),
-        HEADER_LENGHT_IMPL_2(NETWORK_LENGHT_OF_IP.value + STATION_LENGHT_OF_IP.value + SEQUENCY_NUMBER.value + TTL.value),
         NETWORK_FULL_ADDRESS_SIZE(NETWORK_LENGHT_OF_IP.value + STATION_LENGHT_OF_IP.value), NETWORK_DEFAULT(-1),
-        HEADER_LENGHT_IMPL_1(NETWORK_FULL_ADDRESS_SIZE.value*2);
+        HEADER_LENGHT_IMPL_1(NETWORK_FULL_ADDRESS_SIZE.value * 2),
+        HEADER_LENGHT_IMPL_2((NETWORK_FULL_ADDRESS_SIZE.value * 2) + SEQUENCY_NUMBER.value + TTL.value);
         private int value;
 
         private Constants(int value){
