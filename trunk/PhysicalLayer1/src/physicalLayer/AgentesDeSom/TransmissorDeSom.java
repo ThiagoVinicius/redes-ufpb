@@ -13,14 +13,12 @@ import javax.sound.sampled.SourceDataLine;
  *
  * @author Hugo e Janduy
  */
-public class TransmissorDeSom{
-
+public class TransmissorDeSom {
+    
     SourceDataLine linha = null;/*Linha por onde o sinal e lido da caixa de som*/
 
     //byte[] abData = new byte[Sinal.QUANTIDADEAMOSTRAPORSINAL * Sinal.QUANTIDADEDESINAIS];
-    static byte[] bitSinalizador = new byte[Sinal.QUANTIDADEAMOSTRAPORSINAL*2];
-    static byte[] abData = new byte[Sinal.QUANTIDADEAMOSTRAPORSINAL * Sinal.QUANTIDADEDESINAIS];
-    static byte[] mensBitSinalizador = Sinal.converteStringParaBytes("11");/*COntem a mensagem do bit sinalizador*/
+    static byte[] bitSinalizador = new byte[Sinal.QUANTIDADEAMOSTRAPORSINAL];
 
 
   
@@ -84,6 +82,7 @@ public class TransmissorDeSom{
      *
      ****/
     public static byte[] montaSinal(byte[] bitSinalizador, int delay, byte[] messagem) {
+        
         byte[] sinal = new byte[bitSinalizador.length + delay + messagem.length];
 
         int i;
@@ -101,7 +100,6 @@ public class TransmissorDeSom{
         for (j = 0; j < messagem.length; j++) {
             sinal[i + j] = messagem[j];
         }
-
 
         return sinal;
     }
@@ -125,15 +123,20 @@ public class TransmissorDeSom{
 
     private byte[] converteInterlayerDataParaBytes(InterlayerData data)
     {
-       int comprimento = Sinal.QUANTIDADEDESINAIS;
+       int comprimento = Sinal.QUANTIDADEDESINAIS-4;
 
-        byte[] resultado = new byte[comprimento];
+        byte[] resultado = new byte[comprimento+4];
+        resultado[0] = 1;
+        resultado[1] = 1;
+        resultado[18] = 1;
+        resultado[19] = 1;
+
 
         for (int i = 0; i < comprimento; i++) {
             if (data.getBit(i)) {
-                resultado[i] = 1;
+                resultado[i+2] = 1;
             } else {
-                resultado[i] = 0;
+                resultado[i+2] = 0;
             }
         }
 
@@ -142,14 +145,23 @@ public class TransmissorDeSom{
 
    
     public void enviaMensagem(InterlayerData data) {
+        
+        byte[] abData = new byte[Sinal.QUANTIDADEAMOSTRAPORSINAL * Sinal.QUANTIDADEDESINAIS];
+        byte[] mensBitSinalizador = Sinal.converteStringParaBytes("1");/*COntem a mensagem do bit sinalizador*/
+        
+        try {
 
-        constroiOndaCompleta(converteInterlayerDataParaBytes(data), abData);
-        criaBitSinalizador(TransmissorDeSom.mensBitSinalizador, bitSinalizador);
+           constroiOndaCompleta(converteInterlayerDataParaBytes(data), abData);
+            criaBitSinalizador(mensBitSinalizador, bitSinalizador);
 
-        byte[] m = montaSinal(bitSinalizador, 400, abData);
+            byte[] m = montaSinal(bitSinalizador, 3 * Sinal.QUANTIDADEAMOSTRAPORSINAL, abData);
 
-        //GraficoTxt.escreveOndaTxt(m, "onda.enviada.txt");
-        enviaSom(m);                           
+            enviaSom(m);
+            Thread.sleep(30);
+            
+        } catch (Exception ex) {
+            ex.printStackTrace();
 
+        }
     }
 }

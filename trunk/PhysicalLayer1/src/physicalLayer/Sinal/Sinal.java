@@ -11,14 +11,14 @@ package physicalLayer.Sinal;
  * 
  */
 public class Sinal {
-
+    
     /****
      * BARULHOMAXIMO: Constante que define o limite maximo no qual a deteccao
      * de colisao ocorre.
      * */
     public static final byte BARULHOMAXIMO = 100; /*O intervalo eh  0 ate 127*/
 
-    public static final byte AMPLITUDE = 127; /*O intervalo eh  0 ate 127*/
+    public static final byte AMPLITUDE = 120; /*O intervalo eh  0 ate 127*/
 
     /**
      * QUANTIDADEDESINAIS:Constante contendo o valor do buffer do daemon.
@@ -26,27 +26,25 @@ public class Sinal {
      * de erro
      *
      ****/
-
-    //TODO mudar valor para 16
     public static final int QUANTIDADEDESINAIS = 20;
-    /****
-     * AMAIS: refere-se a jenela de amostras a mais captadas durante a
-     *        recepcão.
-     *        OBS: Precisa ser melhorada e adequada a cada maquina
-     ****/
-    public static final int AMAIS = 1000;
     /****
      * QUANTIDADEAMOSTRAPORSINAL:numero de amostras usadas para representar cada
      *        bit.   Dev ser sempre multiplo de 48;
      ****/
     public static final int MULTIPLO = 48;
-    public static final int QUANTIDADEAMOSTRAPORSINAL = MULTIPLO;
+    public static final int QUANTIDADEAMOSTRAPORSINAL = 2 * MULTIPLO;
+    /****
+     * AMAIS: refere-se a jenela de amostras a mais captadas durante a
+     *        recepcão.
+     *        OBS: Precisa ser melhorada e adequada a cada maquina
+     ****/
+    public static final int AMAIS = 12 *MULTIPLO;
     /**
      * ZERO,UM: refere-se as frequencias usadas para representar cada bit.
      *
      ***/
     private static final int ZERO = 2;
-    private static final int UM = 6;
+    private static final int UM = 8;
 
     /**
      * escreveOndaSenoide(): escreve uma onda senoide. O valor que determina
@@ -76,10 +74,10 @@ public class Sinal {
 
      *
      ***/
-    public static void escreveOndaSenoide(byte[] simbolo, int offset, float frequencia,
-            byte volume) {
+    public static void escreveOndaSenoide(byte[] simbolo, int offset, float frequencia,  byte volume)
+    {
         if ((simbolo.length) % Sinal.MULTIPLO != 0) {
-            System.out.println("ERRO!! A funcao escreve nao representara uma senoide completa!");
+            //System.out.println("ERRO!! A funcao escreve nao representara uma senoide completa!");
         }
 
         double anguloEmRadiano = 2 * frequencia * Math.PI / Sinal.QUANTIDADEAMOSTRAPORSINAL;

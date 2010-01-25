@@ -18,16 +18,18 @@ public class CaptadorDeSom{
 
     TargetDataLine linha = null;/*Linha por onde o sinal e lido da caixa de som*/
 
-    static byte[] bitSinalizador = new byte[Sinal.QUANTIDADEAMOSTRAPORSINAL * 3];
+    static byte[] bitSinalizador = new byte[Sinal.QUANTIDADEAMOSTRAPORSINAL * 2];
     static byte[] dados = new byte[Sinal.QUANTIDADEAMOSTRAPORSINAL * Sinal.QUANTIDADEDESINAIS + Sinal.AMAIS];
     int numeroDeBytesLidos;
-    static byte silencio = 15;/*Acima disso vai ser considarado como um pico*/
+    static byte silencio = 35;/*Acima disso vai ser considarado como um pico*/
 
     static int MINIMO_POR_BIT_SINALIZADOR = 3;/*Regular*/
 
-    static int PICO = 12;/*Usado na funcao de recuperacao*/
+    static int PICO = 35;/*Usado na funcao de recuperacao*/
 
-    static int LIMIAR = 8;/*Usado de frequencia*/
+    static int LIMIAR = 10;/*Usado de frequencia*/
+    static int vez = 0;
+    static int vez2=0;
 
 
     /****
@@ -44,12 +46,12 @@ public class CaptadorDeSom{
     }
 
     public byte[] captaMensagem() {
-        
+
         int max = 0;
-        max = 0;
-        /*00 Estao inicial:ler meio*/
-        // System.out.println("CAPTADOR:" + System.currentTimeMillis());
+
         numeroDeBytesLidos = linha.read(bitSinalizador, 0, bitSinalizador.length);
+        GraficoTxt.escreveOndaTxt(bitSinalizador, "BitSinalizadorCaptadado.txt");
+
         /*01 Verifica se houveram bits sinanizadores de chegada de dados*/
         int contadodorDePicos = 0;/*Essa variavel tem que ser escolhida de acordo com o que o pc ler*/
 
@@ -61,23 +63,27 @@ public class CaptadorDeSom{
                 ++contadodorDePicos;
             }
         }
-        try {
-           
-            if (contadodorDePicos > MINIMO_POR_BIT_SINALIZADOR) {
 
+        try {
+
+            if (contadodorDePicos > MINIMO_POR_BIT_SINALIZADOR) {
+                //System.out.println("CHAMA METODO DE LEITURA DE DADOS");
+                /*2.2 Chama o metode de leitura de dados*/
                 capturaSom();
 
+                GraficoTxt.escreveOndaTxt(dados, "OndaCaptada" + (vez) + ".txt");
+                GraficoTxt.escreveOndaTxt(bitSinalizador, "BitSinalizadorCaptadado" + (vez++) + ".txt");
+                //System.exit(1);
                 byte[] resultado = analizaSinal(dados, buscaInicioDaOnda(dados));
 
-
-                GraficoTxt.escreveOndaTxt(dados, "OndaCaptada.txt");
-                GraficoTxt.escreveOndaTxt(bitSinalizador, "BitSinalizadorCaptadado.txt");
-
                 return resultado;
-
-            }
+            } else {
+                // System.out.println("Not min");
+                /*2.1 Se Nao espera millsecs e volta para 0*/
+                // Thread.sleep(5);
+                }
         } catch (Exception ex) {
-            logger.error("Exception ", ex);
+            //ex.printStackTrace();
         }
 
         return null;
@@ -95,50 +101,67 @@ public class CaptadorDeSom{
      *  buscaInicioDaOnda(): busca inicio da onda
      */
     public int buscaInicioDaOnda(byte[] sinalRecebido) {
-        int k = 0, pos;
-        for (k = 180; k < sinalRecebido.length; k++) {
-            // if (Math.abs(sinalRecebido[k]) > PICO) {
-            if (sinalRecebido[k] > PICO) {
+        int k = 0;
 
-                int r = (sinalRecebido[k + 1] > sinalRecebido[k]) ? k + 1 : k - 1;
-                GraficoTxt.bitsDoGrafo(dados, r);
-
-                return r;
+        int marca = 0;
+        for (int i = 0; i < Sinal.QUANTIDADEAMOSTRAPORSINAL * 10; i++) {
+            if (sinalRecebido[i] > (byte) PICO) {
+                marca = i;
+            }
+            if ((i - marca) > 48) {
+                k = (i - marca) / 2 + marca;
+                break;
             }
         }
-        return -1;/*Indicativo de erro*/
+
+        for (; k < sinalRecebido.length; k++) {
+            if (sinalRecebido[k] > PICO) {
+                break;
+            }
+        }
+        
+        while ((k > 0) && (sinalRecebido[k]) > 0) {
+            k--;
+        }
+        // GraficoTxt.bitsDoGrafo(sinalRecebido, k + 1);
+        return ++k;/*Indicativo de erro*/
     }
 
     public byte[] analizaSinal(byte[] sinalRecebido, int offset) {
         byte[] recuperado = new byte[Sinal.QUANTIDADEDESINAIS];
         int ultimo = offset + Sinal.QUANTIDADEAMOSTRAPORSINAL * Sinal.QUANTIDADEDESINAIS;
 
-        
         int contadorDePicos = 0;/*Sinal 0(positivo) 1*/
         int posBit = 0;
         contadorDePicos = 0;
-        for (int i = offset + 2, j = 1; i < ultimo; i++, j++) {
 
-            if (!(sinalRecebido[i] == 0)) {
-                if (!(sinalRecebido[i - 1] == 0)) {
-                    if (!(((sinalRecebido[i] > 0) && (sinalRecebido[i - 1] > 0)) || ((sinalRecebido[i] < 0) && (sinalRecebido[i - 1] < 0)))) {
-                        contadorDePicos++;
-                    }
-                } else {
-                    if (!(((sinalRecebido[i] > 0) && (sinalRecebido[i - 2] > 0)) || ((sinalRecebido[i] < 0) && (sinalRecebido[i - 2] < 0)))) {
-                        contadorDePicos++;
+        try {
+
+            for (int i = offset + 2, j = 1; i < ultimo; i++, j++) {
+
+                if (!(sinalRecebido[i] == 0)) {
+                    if (!(sinalRecebido[i - 1] == 0)) {
+                        if (!(((sinalRecebido[i] > 0) && (sinalRecebido[i - 1] > 0)) || ((sinalRecebido[i] < 0) && (sinalRecebido[i - 1] < 0)))) {
+                            contadorDePicos++;
+                        }
+                    } else {
+                        if (!(((sinalRecebido[i] > 0) && (sinalRecebido[i - 2] > 0)) || ((sinalRecebido[i] < 0) && (sinalRecebido[i - 2] < 0)))) {
+                            contadorDePicos++;
+                        }
                     }
                 }
+                if (j % Sinal.QUANTIDADEAMOSTRAPORSINAL == 0) {
+                    recuperado[posBit++] = (byte) ((contadorDePicos >= LIMIAR) ? 1 : 0);
+                    //        System.err.printf("Recuperado[%d]:%d || Limiar: %d || Inicio %d\n", posBit - 1, recuperado[posBit - 1], contadorDePicos, i - Sinal.QUANTIDADEAMOSTRAPORSINAL);
+                    contadorDePicos = 0;
+                }
             }
-            if (j % Sinal.QUANTIDADEAMOSTRAPORSINAL == 0) {
-                recuperado[posBit++] = (byte) ((contadorDePicos >= LIMIAR) ? 1 : 0);
-                
-                contadorDePicos = 0;
-            }
-        }
-        recuperado[posBit] = (byte) ((contadorDePicos >= LIMIAR) ? 1 : 0);
 
+        } catch (Exception e) {
+        }
         
+        recuperado[posBit] = (byte) ((contadorDePicos >= LIMIAR) ? 1 : 0);
+        //System.err.printf("Recuperado[%d]:%d || Limiar: %d\n", posBit, recuperado[posBit], contadorDePicos);
         return recuperado;
     }
 }

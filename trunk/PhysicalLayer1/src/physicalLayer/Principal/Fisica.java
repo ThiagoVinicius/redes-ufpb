@@ -58,12 +58,12 @@ public class Fisica extends Physical{
 
     @Override
     public int minPacketSize() {
-        return Sinal.QUANTIDADEDESINAIS;
+        return Sinal.QUANTIDADEDESINAIS-4;
     }
 
     @Override
     public int maxPacketSize() {
-        return Sinal.QUANTIDADEDESINAIS;
+        return Sinal.QUANTIDADEDESINAIS-4;
     }
 
     private void iniciaCaptura() {
@@ -74,12 +74,13 @@ public class Fisica extends Physical{
                 byte[] bytes;
                 boolean b = true;
 
-                InterlayerData data = new InterlayerData(1);
+                InterlayerData data;
 
                 logger.info("Thread de recebimento iniciada.");
 
                 while(b)
                 {
+                    data = new InterlayerData(16);
                     bytes = capta.captaMensagem();
 
                     if(bytes == null)
@@ -92,14 +93,14 @@ public class Fisica extends Physical{
                     }
                     else
                     {
-                        for(int i = 0; i < bytes.length; i++)
+                        for(int i = 2; i < bytes.length-2; i++)
                         {
                             if (bytes[i] == 1) {
-                                data.setBit(i);
+                                data.setBit(i-2);
                             }
                             else
                             {
-                                data.clearBit(i);
+                                data.clearBit(i-2);
                             }
                         }
 
