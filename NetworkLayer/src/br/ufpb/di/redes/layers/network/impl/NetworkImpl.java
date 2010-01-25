@@ -76,6 +76,7 @@ public class NetworkImpl extends Network {
      * 
      * @param downLayers as camadas inferiores
      * @param source_ips os ips origem que cada posicao DEVE esta associoada a cada posicao do array de enlaces
+     * @param smaller_datalink_max_packet_size o menor maximo de todos os enlaces
      */
     public NetworkImpl(DataLink[] downLayers, int [] source_ips, int smaller_datalink_max_packet_size) {
         super(downLayers);
