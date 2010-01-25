@@ -30,9 +30,9 @@ public class NetworkImpl extends Network {
      */
     public enum Constants {NETWORK_LENGHT_OF_IP(2), STATION_LENGHT_OF_IP(2), 
         PATERN_IP_POSITION(0), SEQUENCY_NUMBER(2), TTL(2),
-        HEADER_LENGHT_IMPL_1(NETWORK_LENGHT_OF_IP.value + STATION_LENGHT_OF_IP.value),
         HEADER_LENGHT_IMPL_2(NETWORK_LENGHT_OF_IP.value + STATION_LENGHT_OF_IP.value + SEQUENCY_NUMBER.value + TTL.value),
-        NETWORK_FULL_ADDRESS_SIZE(NETWORK_LENGHT_OF_IP.value + STATION_LENGHT_OF_IP.value), NETWORK_DEFAULT(-1);
+        NETWORK_FULL_ADDRESS_SIZE(NETWORK_LENGHT_OF_IP.value + STATION_LENGHT_OF_IP.value), NETWORK_DEFAULT(-1),
+        HEADER_LENGHT_IMPL_1(NETWORK_FULL_ADDRESS_SIZE.value*2);
         private int value;
 
         private Constants(int value){
@@ -42,7 +42,18 @@ public class NetworkImpl extends Network {
         public int getValue(){
             return value;
         }
+
+        @Override
+        public String toString() {
+            return String.format("%s - %d", super.toString(), value);
+        }
     }
+
+//    static {
+//        for(Constants constants : Constants.values()){
+//            System.out.println(constants);
+//        }
+//    }
     
      /**
      * Chave - Rede ou Estacao
@@ -75,9 +86,11 @@ public class NetworkImpl extends Network {
     @Override
     protected void processReceivedData(InterlayerData data, int soruce_mac, int datalink_id) {
         int ip_dest = data.takeInfo(Constants.NETWORK_FULL_ADDRESS_SIZE.getValue(), Constants.NETWORK_FULL_ADDRESS_SIZE.getValue());
+        LOGGER.debug("Abri pacote de destino {}.", ip_dest);
         
         //Pega o IP destino e verifica se e' o nosso IP, se o pacote nao for para nos repessa o pacote para o enlace
         if(!containsIp(ip_dest)){
+            LOGGER.debug("Pacote nao e' para mim, roteando.");
             /*
              * Estava assim
              * int dest_mac = getMacToSendToIp(ip_dest, datalink_id);
@@ -91,7 +104,7 @@ public class NetworkImpl extends Network {
              * sao da camada de enlace e tem o nosso cabecalho ja.
              */
 
-            makesRouting(data, ip_dest);
+            makesRouting(data, ip_dest, false);
             return;
         }
         
@@ -105,6 +118,9 @@ public class NetworkImpl extends Network {
 
         //Obtem o ip
         int source_ip = data.takeInfo(0, Constants.NETWORK_FULL_ADDRESS_SIZE.getValue());
+
+        LOGGER.debug("Pacote e' para mim, origem {}", source_ip);
+
         bubbleUp(dataToTransport, source_ip);//manda para cima
     }
 
@@ -118,7 +134,7 @@ public class NetworkImpl extends Network {
             return;
         }
 
-        makesRouting(data, dest_ip);
+        makesRouting(data, dest_ip, true);
     }
 
     @Override
@@ -127,7 +143,7 @@ public class NetworkImpl extends Network {
          * So posso quebrar o pacote recebido no
          * numero maximo que posso representar no numero de sequencia 'x' o menor maximo dos enlaces.
          */
-        return SMALLER_DATALINK_MAX_PACKET_SIZE * Constants.SEQUENCY_NUMBER.value;
+        return SMALLER_DATALINK_MAX_PACKET_SIZE - Constants.HEADER_LENGHT_IMPL_1.value;
     }
 
     @Override
@@ -175,17 +191,10 @@ public class NetworkImpl extends Network {
      * @return o ip origem relacionado com o ip destino
      */
     private int getIp(int dest_ip) {
-        
-        InterlayerData network_dest_ip = new InterlayerData(Constants.NETWORK_LENGHT_OF_IP.getValue());
-        network_dest_ip.putInfo(0, Constants.NETWORK_LENGHT_OF_IP.getValue(), dest_ip);
-        int dest_network = network_dest_ip.takeInfo(0, Constants.NETWORK_LENGHT_OF_IP.getValue());
-
-        InterlayerData network_source_ip = new InterlayerData(Constants.NETWORK_FULL_ADDRESS_SIZE.getValue());
+        int dest_network = splitIP(dest_ip)[0];
 
         for(int ip: source_ips){
-
-            network_source_ip.putInfo(0, Constants.NETWORK_LENGHT_OF_IP.getValue(), ip);
-            int source_network = network_source_ip.takeInfo(0, Constants.NETWORK_LENGHT_OF_IP.getValue());
+            int source_network = splitIP(ip)[0];
             if(source_network == dest_network)
                 return ip;
         }
@@ -264,6 +273,7 @@ public class NetworkImpl extends Network {
      * @return um array onde a primeira posicao indica o endereco de rede e a segunda indica o endereco da estacao
      */
     private int[] splitIP(int ip){
+
         InterlayerData interlayerData = new InterlayerData(Constants.NETWORK_FULL_ADDRESS_SIZE.getValue());
 
         interlayerData.putInfo(0, Constants.NETWORK_FULL_ADDRESS_SIZE.getValue(), ip);
@@ -287,7 +297,7 @@ public class NetworkImpl extends Network {
      *
      * @param my_ip o ip correspondente a tabela.
      * @param ip o ip a ser removido da tabela juntamente com seu mac
-     *
+     *9
      * @return o valor removido ou -1 se nao existia
      */
     public int removeInArpTable(int my_ip, int ip){
@@ -322,7 +332,7 @@ public class NetworkImpl extends Network {
      */
     public int getInRouteTable(int to_send_ip){
 
-        //Se encontramos a chave retornamos a mesma caso contrario returnamos -1
+        //Se encontramos a chave retornamos a mesma caso contrario returnamos -1mac
         if(route_table.containsKey(to_send_ip))
             return route_table.get(to_send_ip);//Retorna que envia para o determinado IP
 
@@ -386,12 +396,17 @@ public class NetworkImpl extends Network {
      *
      * @param data o pacote a ser enviado
      * @param dest_ip o ip destino
+     * @param isUpperLayer indica se o pacote foi enviado pela camada de cima (true) ou pela camada de baixo (false).
+     *                     Isso e' uma gambiarra porque eu to sem paciencia de ajeitar!
      */
-    private void makesRouting(InterlayerData data, int dest_ip){
+    private void makesRouting(InterlayerData data, int dest_ip, boolean isUpperLayer){
         //Array de bits suficiente para anexar o nosso cebecalho
-        InterlayerData interlayerData = new InterlayerData(data.length + Constants.HEADER_LENGHT_IMPL_1.getValue());
+        InterlayerData interlayerData = isUpperLayer ? 
+            new InterlayerData(data.length + Constants.HEADER_LENGHT_IMPL_1.getValue()) : data;
 
         int network_dest = splitIP(dest_ip)[0];
+        LOGGER.debug("Network de destino e' {} do ip de destino {}!", network_dest, dest_ip);
+
         Integer sender = route_table.get(network_dest);
 
         //Caso nao encontre rota, busca pela rota default
@@ -401,22 +416,30 @@ public class NetworkImpl extends Network {
         }
 
         int my_ip = getIp(sender);
+        
+        LOGGER.debug("Rede do meu ip e' {} e rede do sender e' {}", splitIP(my_ip)[0], splitIP(sender)[0]);
 
         LOGGER.debug("Meu ip e' {} correspondente ao ip destino {}.", my_ip, dest_ip);
+        LOGGER.debug("Enviado via sender de ip {}", sender);
+
+        //Se o sender foi eu mesmo, mando pro mac destino
+        if (containsIp(sender)) {
+            sender = dest_ip;
+        }
 
         int sender_mac = arp_table.get(my_ip, sender);
 
-        //Obs: Erro, tem q procurar para onde ENVIAR se o Ip não for minha rede por exemplo
-
         //Adiciona os respectivos IPs origem e destino
-        interlayerData.putInfo(0, Constants.NETWORK_FULL_ADDRESS_SIZE.getValue(), my_ip);
-        interlayerData.putInfo(Constants.NETWORK_FULL_ADDRESS_SIZE.getValue(), Constants.NETWORK_FULL_ADDRESS_SIZE.getValue(), dest_ip);
-
-        //Copia dos bits
-        InterlayerData.copyBits(interlayerData, data, 0, data.length, Constants.HEADER_LENGHT_IMPL_1.getValue());
-
+        if(isUpperLayer) {
+            interlayerData.putInfo(0, Constants.NETWORK_FULL_ADDRESS_SIZE.getValue(), getIp());
+            interlayerData.putInfo(Constants.NETWORK_FULL_ADDRESS_SIZE.getValue(), Constants.NETWORK_FULL_ADDRESS_SIZE.getValue(), dest_ip);
+            InterlayerData.copyBits(interlayerData, data, 0, data.length, Constants.HEADER_LENGHT_IMPL_1.getValue());
+        }
+            
         //Pega o id do enlace do meu ip
         int datalink_id = getIdDatalinkFromIp(my_ip);
+
+        LOGGER.debug("Enviando para id {}, mac {}.", datalink_id, sender_mac);
 
         bubbleDown(interlayerData, sender_mac, datalink_id);
     }
