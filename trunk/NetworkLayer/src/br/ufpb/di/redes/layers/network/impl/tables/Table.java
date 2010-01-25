@@ -99,4 +99,6 @@ public class Table {
     public int sizeMap(int ip){
         return constainsMap(ip) ? table.get(ip).size() : -1;
     }
+
+
 }
