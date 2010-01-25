@@ -71,10 +71,12 @@ public class PhysicalTest extends TestCase {
 
         top.bubbleDown(data);
 
-        assertEquals(data, top.received.take());
+        InterlayerData received = top.received.take();
+
+        assertEquals(data, received);
 
         logger.info("enviado: {}", data);
-        logger.info("recebido: {}", top.received.take());
+        logger.info("recebido: {}", received);
 
         //top.received.take();
 
