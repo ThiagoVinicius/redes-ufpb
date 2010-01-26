@@ -465,6 +465,10 @@ public class DataLink1 extends DataLink {
 
         int controle = getControle(data);
 
+        if (descartaQuadros && controle != 1) {
+            return;
+        }
+
         if ((mensagemASerRecebida && !verificaCRC(data)) || controle == 0) {
             mensagemReceivedAtual.clear();
             mensagemASerRecebida = false;
@@ -535,9 +539,6 @@ public class DataLink1 extends DataLink {
                 return;
             }
         } else if (controle == CTRLQUADRODEDADOSINTERMEDIARIO) {
-            /** Se estiver neste modo, deve descartar este quadro. */
-            if (descartaQuadros) return;
-
             /**
              * Se nao há mensagem para ser recebida, este quadro de dados
              * não interessa.
@@ -552,9 +553,6 @@ public class DataLink1 extends DataLink {
             mensagemReceivedAtual.add(data);
             return;
         } else if (controle == CTRLQUADRODEDADOSFINAL) {
-            /** Se estiver neste modo, deve descartar este quadro. */
-            if (descartaQuadros) return;
-            
             /**
              * Se nao há mensagem para ser recebida, este quadro de dados
              * não interessa.
