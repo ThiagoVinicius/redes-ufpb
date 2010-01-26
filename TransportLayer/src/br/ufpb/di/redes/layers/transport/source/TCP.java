@@ -33,6 +33,7 @@ public class TCP extends Transport implements IConstants {
     private boolean timeoutPut = false;
 
     private Connection connection;
+    private boolean closeConnection;
     //private static int connectID;
 
     private ThreeWaysHandshake handshake = new ThreeWaysHandshake();
@@ -233,9 +234,10 @@ public class TCP extends Transport implements IConstants {
             InterlayerData dataThirdWay = new InterlayerData(dataHeaderThirdWay.length());
             dataFirstWay.data[0] = parseStringToInt(dataHeaderThirdWay);
 
-            // encerrar conexao
-
             bubbleDown(dataThirdWay, connection.destIp);
+
+            closeConnection = true;
+            this.connection = null;
         }
 
         else {
@@ -257,7 +259,8 @@ public class TCP extends Transport implements IConstants {
 
             closeReply = false;
 
-            // encerrar conexao
+            closeConnection = true;
+            this.connection = null;
         }
 
     }
@@ -345,7 +348,11 @@ public class TCP extends Transport implements IConstants {
 
     @Override
     protected boolean isActive(Connection con) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if( !closeConnection && (con == null) ) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
