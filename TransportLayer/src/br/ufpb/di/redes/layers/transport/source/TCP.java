@@ -12,6 +12,7 @@ import br.ufpb.di.redes.layers.transport.interfaces.Transport;
 import br.ufpb.di.redes.layers.transport.interfaces.UnnableToConnectException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +37,7 @@ public class TCP extends Transport implements IConstants {
 
     private ThreeWaysHandshake handshake = new ThreeWaysHandshake();
     private ArrayBlockingQueue container = new ArrayBlockingQueue<ToReceiveMessage>(1);
-    private LinkedBlockingQueue listBytes = new LinkedBlockingQueue();
+    private LinkedBlockingQueue listBytes = new LinkedBlockingQueue(8);
 
 
     public TCP(Network downLayer, int source_ip) {
@@ -78,6 +79,13 @@ public class TCP extends Transport implements IConstants {
       */
     @Override
     protected void processReceivedData(InterlayerData data, int source_ip) {
+        if(connection != null) {
+            try {
+                receive(connection);
+            } catch (InterruptedException ex) {
+                java.util.logging.Logger.getLogger(TCP.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
 
         ToReceiveMessage receive = new ToReceiveMessage(data, source_ip);
         container.add(receive);
@@ -87,7 +95,7 @@ public class TCP extends Transport implements IConstants {
         if(fin == '1') {
             //aqui pegara' uma conexao na tabela
             closeReply = true;
-            close(new Connection(0, 0, 0, 0, null));
+            close(connection);
         }
 
     }
@@ -378,12 +386,14 @@ public class TCP extends Transport implements IConstants {
 
     @Override
     public int minPacketSize() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        //throw new UnsupportedOperationException("Not supported yet.");
+       return downLayer.maxPacketSize();
     }
 
     @Override
     public int maxPacketSize() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        //throw new UnsupportedOperationException("Not supported yet.");
+        return downLayer.minPacketSize();
     }
 
 
@@ -426,6 +436,24 @@ public class TCP extends Transport implements IConstants {
 
          return string;
      }
+
+    public LinkedBlockingQueue getListBytes() {
+        return listBytes;
+    }
+
+    public void setListBytes(LinkedBlockingQueue listBytes) {
+        this.listBytes = listBytes;
+    }
+
+    public PacketTCP getLastReceivedPacket() {
+        return lastReceivedPacket;
+    }
+
+    public void setLastReceivedPacket(PacketTCP lastReceivedPacket) {
+        this.lastReceivedPacket = lastReceivedPacket;
+    }
+
+    
 
 
 
