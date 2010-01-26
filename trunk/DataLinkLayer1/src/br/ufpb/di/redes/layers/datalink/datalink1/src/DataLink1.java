@@ -389,11 +389,6 @@ public class DataLink1 extends DataLink {
         InterlayerData aux = new InterlayerData(msg.size() * BITSDADOS);
 
         for (int i = 0; i < msg.size(); i++) {
-            if (!verificaCRC(msg.get(i))) {
-                logger.warn("Erro na verificação de CRC - mensagem perdida.");
-                return null;
-            }
-            logger.debug("CRC verificado corretamente");
             aux.putInfo(i*BITSDADOS, BITSDADOS,
                     desenquadra(msg.get(i)).takeInfo(0, BITSDADOS));
         }
@@ -426,6 +421,12 @@ public class DataLink1 extends DataLink {
     }
 
     @Override
+    protected void bubbleDown(InterlayerData data) {
+        logger.debug("Enviando mensagem para a Fisica: {}", data);
+        super.bubbleDown(data);
+    }
+
+    @Override
     protected void processSentData(InterlayerData data, int dest_mac) {
         logger.info("Mensagem " + data + " recebida da camada de Rede.");
         mensagemSentAtual = criaQuadrosDeDados(data);
@@ -450,19 +451,28 @@ public class DataLink1 extends DataLink {
         for (int i = 0; i < mensagemSentAtual.size(); i++)
             bubbleDown(mensagemSentAtual.get(i));
         mensagemASerEnviada = false;
-        logger.info("Mensagem enviada para a camada Física.");
         s2.release();
     }
 
     @Override
     protected void processReceivedData(InterlayerData data) {
-        logger.info("Mensagem recebida da camada Física.");
+        logger.info("Mensagem recebida da camada Física: {}.", data);
         if (data.length != TAMQUADRODEDADOS &&
             data.length != TAMQUADROPERMISSAOENDERECAMENTO) {
             logger.warn("Mensagem com tamanho incorreto será descartada.");
             return;
         }
+
         int controle = getControle(data);
+
+        if ((mensagemASerRecebida && !verificaCRC(data)) || controle == 0) {
+            mensagemReceivedAtual.clear();
+            mensagemASerRecebida = false;
+            descartaQuadros = true;
+            bubbleDown(criaTokenInicial());
+            return;
+        }
+
         if (controle == CTRLQUADROPERMISSAOEENDERECAMENTO) {
             /**
              * Se a verificação de CRC falhar, envia um novo token e entra em
@@ -474,6 +484,8 @@ public class DataLink1 extends DataLink {
             if (!verificaCRC(data)) {
                 logger.warn("Erro na verificação de CRC do token. Um novo será enviado.");
                 descartaQuadros = true;
+                mensagemASerRecebida = false;
+                mensagemReceivedAtual.clear();
                 bubbleDown(criaTokenInicial());
                 return;
             }
