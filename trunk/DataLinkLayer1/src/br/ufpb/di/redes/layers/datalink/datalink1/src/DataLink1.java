@@ -479,21 +479,6 @@ public class DataLink1 extends DataLink {
         }
 
         if (controle == CTRLQUADROPERMISSAOEENDERECAMENTO) {
-            /**
-             * Se a verificação de CRC falhar, envia um novo token e entra em
-             * um modo em que descartará os próximos quadros de dados até
-             * a chegada do próximo token. Isto é necessário pois pode ser
-             * que o token com problema de CRC esteja carregando quadros de dados
-             * que, se não forem descartados, ficarão vagando na rede.
-             */
-            if (!verificaCRC(data)) {
-                logger.warn("Erro na verificação de CRC do token. Um novo será enviado.");
-                descartaQuadros = true;
-                mensagemASerRecebida = false;
-                mensagemReceivedAtual.clear();
-                bubbleDown(criaTokenInicial());
-                return;
-            }
 
             /** Sai do modo de descartar quadros se esse token estiver correto. */
             descartaQuadros = false;
