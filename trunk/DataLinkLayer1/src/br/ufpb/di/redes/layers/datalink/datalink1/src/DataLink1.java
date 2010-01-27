@@ -479,14 +479,6 @@ public class DataLink1 extends DataLink {
         }
 
         if (controle == CTRLQUADROPERMISSAOEENDERECAMENTO) {
-            /**
-             * Este caso ocorrera qdo algum dos quadros de dados tiver sido
-             * encontrado com erro em um dos enlaces anteriores.
-             */
-            if (mensagemASerRecebida) {
-                mensagemASerRecebida = false;
-                mensagemReceivedAtual.clear();
-            }
 
             /** Sai do modo de descartar quadros se esse token estiver correto. */
             descartaQuadros = false;
