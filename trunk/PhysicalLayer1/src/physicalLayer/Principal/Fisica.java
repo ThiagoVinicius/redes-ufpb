@@ -85,11 +85,11 @@ public class Fisica extends Physical{
 
                     if(bytes == null)
                     {
-                        try {
+                        /*try {
                             Thread.sleep(5);
                         } catch (Exception e) {
                             logger.error("Excessao ", e);
-                        }
+                        }*/
                     }
                     else
                     {
