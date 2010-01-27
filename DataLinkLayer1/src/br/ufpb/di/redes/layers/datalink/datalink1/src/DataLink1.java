@@ -98,6 +98,16 @@ public class DataLink1 extends DataLink {
     /** Campo referente ao MAC deste enlace. */
     private int mac;
 
+    /** Thread utilizada para testar o timeout da passagem de token */
+    private Thread monitorToken;
+
+    /** Tempo maximo (em segundos) que o enlace pode passar sem receber token */
+    private final double timeout = 15;
+
+    /** Utilizados para a verificacao do timeout */
+    private double tempoAtual;
+    private double tempoUltimoToken;
+
     public DataLink1 (Physical downLayer, int id, int mac) {
         super(downLayer, id);
         this.mac = mac;
@@ -109,6 +119,46 @@ public class DataLink1 extends DataLink {
         mensagemASerEnviada = false;
         mensagemASerRecebida = false;
         descartaQuadros = false;
+        tempoAtual = tempoUltimoToken = 0;
+    }
+
+    /**
+     * Retorna a Thread que sera utilizada para monitorar a passagem de token
+     * neste enlace
+     * @param enlace referencia para o enlace atual
+     * @return a thread desejada
+     */
+    private Thread getMonitorToken(DataLink1 enlace) {
+        final DataLink1 enlaceInterno = enlace;
+        return new Thread() {
+            public void run(){
+                while (true) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        logger.warn("Excecao em thread de monitor de token.");
+                    }
+                    enlaceInterno.checaPassagemDeToken();
+                }
+            }
+        };
+    }
+
+    /**
+     * Utilizado para verificar a última vez em que um token foi recebido
+     * ou enviado por este enlace.
+     */
+    private void checaPassagemDeToken() {
+        this.tempoAtual = System.currentTimeMillis();
+        //logger.info("DIFERENCA: {}", ((this.tempoAtual - this.tempoUltimoToken) / 1000));
+        if (((this.tempoAtual - this.tempoUltimoToken) / 1000) > this.timeout) {
+            logger.info ("Erro de timeout, enviando novo token.");
+            mensagemReceivedAtual.clear();
+            mensagemASerRecebida = false;
+            descartaQuadros = true;
+            this.tempoUltimoToken = this.tempoAtual;
+            bubbleDown(criaTokenInicial());
+        }
     }
 
     /**
@@ -158,7 +208,7 @@ public class DataLink1 extends DataLink {
             }
         }
         /** O CRC estará nos últimos 4 bits de aux. */
-        logger.debug("CRC calculado: " + aux.takeInfo(aux.length-TAMCRC, TAMCRC));
+        //logger.debug("CRC calculado: " + aux.takeInfo(aux.length-TAMCRC, TAMCRC));
         return aux.takeInfo(aux.length-TAMCRC, TAMCRC);
     }
 
@@ -415,8 +465,11 @@ public class DataLink1 extends DataLink {
 
         logger.info("Enlace de MAC " + mac + " iniciado.");
         if (mac == PRIMEIROMAC) {
+            this.tempoUltimoToken = System.currentTimeMillis();
             bubbleDown(criaTokenInicial());
             logger.info("Token enviado.");
+            monitorToken = getMonitorToken(this);
+            monitorToken.start();
         }
     }
 
@@ -446,6 +499,7 @@ public class DataLink1 extends DataLink {
         
         /** Envia na frente um token relativo à mensagem atual. */
         InterlayerData token = criaQuadroDePermissaoEEnderecamento(dest_mac, 1, 0);
+        this.tempoUltimoToken = System.currentTimeMillis();
         bubbleDown(token);
         /** Envia cada um dos quadros de dados. */
         for (int i = 0; i < mensagemSentAtual.size(); i++)
@@ -474,11 +528,13 @@ public class DataLink1 extends DataLink {
             mensagemReceivedAtual.clear();
             mensagemASerRecebida = false;
             descartaQuadros = true;
+            this.tempoUltimoToken = System.currentTimeMillis();
             bubbleDown(criaTokenInicial());
             return;
         }
 
         if (controle == CTRLQUADROPERMISSAOEENDERECAMENTO) {
+            this.tempoUltimoToken = System.currentTimeMillis();
 
             /** Sai do modo de descartar quadros se esse token estiver correto. */
             descartaQuadros = false;
@@ -560,6 +616,7 @@ public class DataLink1 extends DataLink {
             /**
              * Com a mensagem recebida, envia um novo token para a rede.
              */
+            this.tempoUltimoToken = System.currentTimeMillis();
             bubbleDown(criaTokenInicial());
 
             /**
