@@ -469,7 +469,8 @@ public class DataLink1 extends DataLink {
             return;
         }
 
-        if ((mensagemASerRecebida && !verificaCRC(data)) || controle == 0) {
+        if (!verificaCRC(data) || controle == 0) {
+            logger.warn ("Erro de CRC, enviando novo token.");
             mensagemReceivedAtual.clear();
             mensagemASerRecebida = false;
             descartaQuadros = true;
