@@ -523,7 +523,7 @@ public class DataLink1 extends DataLink {
             return;
         }
 
-        if (!verificaCRC(data) || controle == 0) {
+        if (controle == 0 || !verificaCRC(data)) {
             logger.warn ("Erro de CRC, enviando novo token.");
             mensagemReceivedAtual.clear();
             mensagemASerRecebida = false;
@@ -557,6 +557,7 @@ public class DataLink1 extends DataLink {
              */
             if (getBitDeDadosToken(data) && (getMACDestino(data) == mac)
                     && !(getBitDePermissaoToken(data))) {
+                if (mensagemASerRecebida) mensagemReceivedAtual.clear();
                 mensagemASerRecebida = true;
                 logger.info("Token recebido que há mensagem para este enlace.");
                 return;
