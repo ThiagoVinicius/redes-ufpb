@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * @since 15 de janeiro de 2009
  */
 public class NetworkImpl extends Network {
-    
+
     private int [] source_ips;
     public final int SMALLER_DATALINK_MAX_PACKET_SIZE;
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkImpl.class);
@@ -28,7 +28,7 @@ public class NetworkImpl extends Network {
     /**
      * PATERN_IP_POSITION - Usado para quando nenhum dos meus IPs concincidir com o IP recebido de cima
      */
-    public enum Constants {NETWORK_LENGHT_OF_IP(2), STATION_LENGHT_OF_IP(2), 
+    public enum Constants {NETWORK_LENGHT_OF_IP(2), STATION_LENGHT_OF_IP(2),
         PATERN_IP_POSITION(0), SEQUENCY_NUMBER(2), TTL(2),
         NETWORK_FULL_ADDRESS_SIZE(NETWORK_LENGHT_OF_IP.value + STATION_LENGHT_OF_IP.value), NETWORK_DEFAULT(-1),
         HEADER_LENGHT_IMPL_1(NETWORK_FULL_ADDRESS_SIZE.value * 2),
@@ -54,7 +54,7 @@ public class NetworkImpl extends Network {
 //            System.out.println(constants);
 //        }
 //    }
-    
+
      /**
      * Chave - Rede ou Estacao
      * Valor - Ip de quem envia para essa rede ou estacao
@@ -66,14 +66,14 @@ public class NetworkImpl extends Network {
      * Valor - Mac correspondente a esse ip
      */
     private Table arp_table = new Table();
-    
+
     /**
      * Construtor da classe
      *
      * Formato do cabecalho:
      * 0 ao 3 bit source_ip (bits mais significativos a direita)
      * do 4 ao 7 bit destination_ip (bits mais significativos a direita)
-     * 
+     *
      * @param downLayers as camadas inferiores
      * @param source_ips os ips origem que cada posicao DEVE esta associoada a cada posicao do array de enlaces
      * @param smaller_datalink_max_packet_size o menor maximo de todos os enlaces
@@ -88,7 +88,7 @@ public class NetworkImpl extends Network {
     protected void processReceivedData(InterlayerData data, int soruce_mac, int datalink_id) {
         int ip_dest = data.takeInfo(Constants.NETWORK_FULL_ADDRESS_SIZE.getValue(), Constants.NETWORK_FULL_ADDRESS_SIZE.getValue());
         LOGGER.debug("Abri pacote de destino {}.", ip_dest);
-        
+
         //Pega o IP destino e verifica se e' o nosso IP, se o pacote nao for para nos repessa o pacote para o enlace
         if(!containsIp(ip_dest)){
             LOGGER.debug("Pacote nao e' para mim, roteando.");
@@ -108,7 +108,7 @@ public class NetworkImpl extends Network {
             makesRouting(data, ip_dest, false);
             return;
         }
-        
+
         //Se for para nos, cria um novo pacate para manda para camada de cima
         InterlayerData dataToTransport = new InterlayerData(data.length - Constants.HEADER_LENGHT_IMPL_1.getValue());
 
@@ -203,7 +203,7 @@ public class NetworkImpl extends Network {
         return source_ips[Constants.PATERN_IP_POSITION.getValue()];
     }
 
-    /** 
+    /**
      * Define se o ip passado como parametro esta ou nao no array de ips
      *
      * @param ip o ip a ser procurado
@@ -219,13 +219,13 @@ public class NetworkImpl extends Network {
 
         return false;
     }
-    
+
     /**
-     * Retorna o mac que deve ser usado para enviar o pacote para o ip passado 
+     * Retorna o mac que deve ser usado para enviar o pacote para o ip passado
      * como argumento.
-     * 
+     *
      * @param ip_dest o ip
-     * 
+     *
      * @return o mac a ser usado para enviar o pacote ou -1 se nada foi encontrado
      */
     private int getMacToSendToIp(int ip_dest, int id_dataLink) {
@@ -305,7 +305,7 @@ public class NetworkImpl extends Network {
         int value = -1;
 
         value = arp_table.remove(my_ip, ip);
-      
+
         return value;
     }
 
@@ -325,11 +325,11 @@ public class NetworkImpl extends Network {
         return value;
     }
     /**
-     * Retorna o ip (sender) que envia para o ip passado como parâmetro.
+     * Retorna o ip (sender) que envia para o ip passado como parÃ¢metro.
      *
-     * @param to_send_ip ip a cujo enviador será buscado na tabela
+     * @param to_send_ip ip a cujo enviador serÃ¡ buscado na tabela
      *
-     * @return o ip caso o mesmo sejá encontrado ou -1 caso contrário
+     * @return o ip caso o mesmo sejÃ¡ encontrado ou -1 caso contrÃ¡rio
      */
     public int getInRouteTable(int to_send_ip){
 
@@ -402,7 +402,7 @@ public class NetworkImpl extends Network {
      */
     private void makesRouting(InterlayerData data, int dest_ip, boolean isUpperLayer){
         //Array de bits suficiente para anexar o nosso cebecalho
-        InterlayerData interlayerData = isUpperLayer ? 
+        InterlayerData interlayerData = isUpperLayer ?
             new InterlayerData(data.length + Constants.HEADER_LENGHT_IMPL_1.getValue()) : data;
 
         int network_dest = splitIP(dest_ip)[0];
@@ -417,14 +417,14 @@ public class NetworkImpl extends Network {
         }
 
         int my_ip = getIp(sender);
-        
+
         LOGGER.debug("Rede do meu ip e' {} e rede do sender e' {}", splitIP(my_ip)[0], splitIP(sender)[0]);
 
         LOGGER.debug("Meu ip e' {} correspondente ao ip destino {}.", my_ip, dest_ip);
         LOGGER.debug("Enviado via sender de ip {}", sender);
 
         //Se o sender foi eu mesmo, mando pro mac destino
-        if (containsIp(sender)) {
+        if (containsIp(sender)||ipAtNetwork(dest_ip)) {
             sender = dest_ip;
         }
 
@@ -436,7 +436,7 @@ public class NetworkImpl extends Network {
             interlayerData.putInfo(Constants.NETWORK_FULL_ADDRESS_SIZE.getValue(), Constants.NETWORK_FULL_ADDRESS_SIZE.getValue(), dest_ip);
             InterlayerData.copyBits(interlayerData, data, 0, data.length, Constants.HEADER_LENGHT_IMPL_1.getValue());
         }
-            
+
         //Pega o id do enlace do meu ip
         int datalink_id = getIdDatalinkFromIp(my_ip);
 
@@ -445,4 +445,22 @@ public class NetworkImpl extends Network {
         bubbleDown(interlayerData, sender_mac, datalink_id);
     }
 
+    /**
+     *Este metedo verifica de se um determidado ip esta ou nao na minha rede
+     *
+     * @param ip ip a ser verificado,
+     *
+     * @return true caso o ip se encontre na rede, ou false caso contrario
+     *
+     */
+    private boolean ipAtNetwork(int ip){
+        for(int i=0;i<source_ips.length;i++){
+
+            if(splitIP(source_ips[i])[0]==splitIP(ip)[0]){
+                return true;
+            }
+
+        }
+        return false;
+    }
 }
