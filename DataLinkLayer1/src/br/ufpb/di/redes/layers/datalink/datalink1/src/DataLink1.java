@@ -523,7 +523,7 @@ public class DataLink1 extends DataLink {
             return;
         }
 
-        if (controle == 0 || !verificaCRC(data)) {
+        if (!verificaCRC(data) && controle == 1) {
             logger.warn ("Erro de CRC, enviando novo token.");
             mensagemReceivedAtual.clear();
             mensagemASerRecebida = false;
@@ -538,6 +538,11 @@ public class DataLink1 extends DataLink {
 
             /** Sai do modo de descartar quadros se esse token estiver correto. */
             descartaQuadros = false;
+
+            if (mensagemASerRecebida) {
+                mensagemASerRecebida = false;
+                mensagemReceivedAtual.clear();
+            }
 
             /**
              * Se o enlace não tem nenhuma mensagem a enviar e o
@@ -592,6 +597,15 @@ public class DataLink1 extends DataLink {
                 bubbleDown(data);
                 return;
             }
+
+            if (!verificaCRC(data)) {
+                logger.warn("Erro nos dados recebidos. Descartando..");
+                mensagemASerRecebida = false;
+                mensagemReceivedAtual.clear();
+                descartaQuadros = true;
+                bubbleDown(criaTokenInicial());
+                return;
+            }
             
             logger.info("Armazenando quadro de dados intermediário (" + data + ").");
             mensagemReceivedAtual.add(data);
@@ -604,6 +618,15 @@ public class DataLink1 extends DataLink {
             if (!mensagemASerRecebida) {
                 logger.info("Mandando para baixo quadro de dados que não interessa.");
                 bubbleDown(data);
+                return;
+            }
+
+            if (!verificaCRC(data)) {
+                logger.warn("Erro nos dados recebidos. Descartando..");
+                mensagemASerRecebida = false;
+                mensagemReceivedAtual.clear();
+                descartaQuadros = true;
+                bubbleDown(criaTokenInicial());
                 return;
             }
 
