@@ -580,7 +580,8 @@ public class DataLink1 extends DataLink {
                    logger.error("Excecao lancada em processReceivedData ", ex);
                 }
                 return;
-            }
+            } else if (mensagemASerEnviada && !getBitDePermissaoToken(data))
+                bubbleDown(data);
         } else if (controle == CTRLQUADRODEDADOSINTERMEDIARIO) {
             /**
              * Se nao há mensagem para ser recebida, este quadro de dados
