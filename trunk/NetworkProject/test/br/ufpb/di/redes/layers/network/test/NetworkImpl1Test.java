@@ -6,9 +6,11 @@
 package br.ufpb.di.redes.layers.network.test;
 
 import br.ufpb.di.redes.layers.all.InterlayerData;
+import br.ufpb.di.redes.layers.datalink.datalink1.src.DataLink1;
 import br.ufpb.di.redes.layers.datalink.interfaces.DataLink;
 import br.ufpb.di.redes.layers.network.impl.NetworkImpl;
 import br.ufpb.di.redes.layers.network.interfaces.Network;
+import br.ufpb.di.redes.layers.physical.interfaces.Physical;
 import br.ufpb.di.redes.layers.tests.DefaultTest;
 import br.ufpb.di.redes.layers.tests.Machine;
 import br.ufpb.di.redes.layers.tests.Util;
@@ -22,7 +24,7 @@ import java.util.Random;
  */
 public class NetworkImpl1Test extends DefaultTest {
 
-    public static final int REPEAT = 10000;
+    public static final int REPEAT = 1000;
 
     public volatile boolean failed = false;
 
@@ -100,10 +102,10 @@ public class NetworkImpl1Test extends DefaultTest {
         }
     }
 
-//    @Override
-//    public DataLink getDataLinkLayer(int machineId, int id, Physical downLayer, int mac) {
-//        return new DataLink1(downLayer, id, mac);
-//    }
+    @Override
+    public DataLink getDataLinkLayer(int machineId, int id, Physical downLayer, int mac) {
+        return new DataLink1(downLayer, id, mac);
+    }
 
     @Override
     public Network getNetworkLayer(int machineId, DataLink[] datalink, int[] ipArray) {
