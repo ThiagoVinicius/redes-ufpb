@@ -590,16 +590,16 @@ public class TCP extends Transport {
 
     protected void send(Connection con, List<Byte> data) {
         
-        ConnectionState state = connections.get(con);
-        
-        if (state == null)
+        if (!isActive(con))
             return;
+
+        ConnectionState state = connections.get(con);
         
         logger.debug("Send chamado");
         
         synchronized (this) {
             
-            if (state.curState == ConnectionState.State.WAIT_ACK) {
+            while (state.curState == ConnectionState.State.WAIT_ACK) {
                 while (state.curState != ConnectionState.State.CONNECTED) {
                     try {
                         wait();
@@ -608,12 +608,8 @@ public class TCP extends Transport {
                 }
             }
         
-            if (state.curState != ConnectionState.State.CONNECTED) {
-                return;
-            }
-            else {
-                state.curState = ConnectionState.State.WAIT_ACK;
-            }
+            
+            state.curState = ConnectionState.State.WAIT_ACK;
         
         }
         
@@ -669,6 +665,10 @@ public class TCP extends Transport {
                     } catch (InterruptedException ex) {
                     }
                 }
+            }
+
+            if (state.curState != ConnectionState.State.CONNECTED) {
+                logger.debug("Timeout alcancado. Reenviando.", state.curState);
             }
 
         }
