@@ -7,6 +7,7 @@ package br.ufpb.di.redes.layers.physical.test;
 
 import br.ufpb.di.redes.layers.all.InterlayerData;
 import br.ufpb.di.redes.layers.physical.interfaces.Physical;
+import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +32,11 @@ public class CheaterPhysicalLayer extends Physical {
 
     @Override
     protected void processSentData(InterlayerData data) {
+        try {
+            Thread.sleep(100L);
+        } catch (InterruptedException ex) {
+            logger.warn("Opa.", ex);
+        }
         forward.fakeReceived(data);
     }
 
