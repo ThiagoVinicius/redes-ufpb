@@ -32,6 +32,17 @@ public class TCP extends Transport {
     
     private static final Logger logger = LoggerFactory.getLogger(TCP.class);
 
+    private void timeout (long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ex) {
+            java.util.logging.Logger.getLogger(TCP.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        synchronized (this) {
+            notifyAll();
+        }
+    }
+
     public TCP(Network downLayer) {
         super(downLayer);
         this.connections = new Hashtable<Connection, ConnectionState> ();
@@ -84,11 +95,12 @@ public class TCP extends Transport {
 
                         finalTime = System.currentTimeMillis();
                         elapsedTime = finalTime - initialTime;
-                        if (elapsedTime > IConstants.TIME_OUT_CONNECTION) {
+                        if (elapsedTime >= IConstants.TIME_OUT_CONNECTION) {
                             break;
                         }
                         try {
-                            wait(Math.abs(IConstants.TIME_OUT_CONNECTION - elapsedTime));
+                            //timeout(Math.abs(IConstants.TIME_OUT_CONNECTION - elapsedTime));
+                            wait(IConstants.TIME_OUT_CONNECTION - elapsedTime);
                         } catch (InterruptedException ex) {
                         }
                     }
@@ -155,11 +167,16 @@ public class TCP extends Transport {
                 
                 finalTime = System.currentTimeMillis();
                 elapsedTime = finalTime - initialTime;
-                if (elapsedTime > IConstants.TIME_OUT_CONNECTION) {
+                if (elapsedTime >= IConstants.TIME_OUT_CONNECTION) {
                     throw new UnnableToConnectException();
                 }
                 try {
-                    wait(Math.abs(IConstants.TIME_OUT_CONNECTION - elapsedTime));
+                    //timeout(Math.abs(IConstants.TIME_OUT_CONNECTION - elapsedTime));
+                    wait(IConstants.TIME_OUT_CONNECTION - elapsedTime);
+                    //wait(finalTime);
+                    //logger.error("Introduzindo atraso");
+                    
+                    //Thread.sleep(Math.abs(IConstants.TIME_OUT_CONNECTION - elapsedTime));
                 } catch (InterruptedException ex) {
                 }
             }
@@ -449,15 +466,34 @@ public class TCP extends Transport {
                     logger.debug("OMG! Nao esta em WAIT_ACK, nem CONNECT_2 mas em {}", state.curState);
                     return;
                 }
+
+                else if (state.curState == ConnectionState.State.CONNECT_2) {
+                    state.curState = ConnectionState.State.CONNECTED;
+                    state.lastPacket = pack;
+                    logger.debug("Ack era para conexao. Conectado!");
+//                    logger.debug("Conexao estabelecida");
+                    notifyAll();
+                    return;
+                }
+
             }
-            
-            state.lastPacket = pack;
-            state.curState = ConnectionState.State.CONNECTED;
-            //connections.remove(state.con);
-            
-            //listen_avail.add(state.con.localPort);
-            
-            logger.debug("Recebido ACK. pacote foi enviado com sucesso.");
+
+            String actualAckNumber = pack.getAckNumber();
+            String expectedAckNumber = state.waitingAck.getSequenceNumber();
+
+
+            if (!actualAckNumber.equals(expectedAckNumber)) {
+                logger.debug("Recebido ACK atrasado. Descartado");
+            } else {
+
+                state.lastPacket = pack;
+                state.curState = ConnectionState.State.CONNECTED;
+                //connections.remove(state.con);
+
+                //listen_avail.add(state.con.localPort);
+
+                logger.debug("Recebido ACK. pacote foi enviado com sucesso.");
+            }
             
         }
         
@@ -507,6 +543,7 @@ public class TCP extends Transport {
                 parseIntToString(state.con.remotePort, IConstants.NUM_BITS_MAX_PORT), 
                 "");
             ack.setACKFlag("1");
+            ack.setAckNumber(pack.getSequenceNumber());
             
             
             InterlayerData ackData = ack.getInterlayerData();
@@ -643,8 +680,6 @@ public class TCP extends Transport {
         
         long initialTime, finalTime;
         long elapsedTime;
-
-        initialTime = System.currentTimeMillis();
         
         while (state.curState != ConnectionState.State.CONNECTED) {
 
@@ -653,15 +688,16 @@ public class TCP extends Transport {
             logger.debug("Enviado, aguardando ack. Estado = {}", state.curState);
             
             synchronized (this) {
+                initialTime = System.currentTimeMillis();
                 while (state.curState != ConnectionState.State.CONNECTED) {
 
                     finalTime = System.currentTimeMillis();
                     elapsedTime = finalTime - initialTime;
-                    if (elapsedTime > IConstants.TIME_OUT_CONNECTION) {
+                    if (elapsedTime >= IConstants.TIME_OUT_SEND) {
                         break;
                     }
                     try {
-                        wait(Math.abs(IConstants.TIME_OUT_CONNECTION - elapsedTime));
+                        wait(IConstants.TIME_OUT_SEND - elapsedTime);
                     } catch (InterruptedException ex) {
                     }
                 }

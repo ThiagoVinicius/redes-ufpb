@@ -15,12 +15,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static br.ufpb.di.redes.layers.transport.source.IConstants.*;
 
 /**
  *
  * @author Jailton
  */
-public class TCP_old extends Transport implements IConstants {
+public class TCP_old extends Transport {// implements IConstants {
     
     private static final Logger logger = LoggerFactory.getLogger(TCP_old.class);
 
@@ -311,7 +312,7 @@ public class TCP_old extends Transport implements IConstants {
                     if(timeoutPut) {
                         return;
                     }
-                    if( ( finalTime - initialTime ) > TIME_OUT_PUT ) {
+                    if( ( finalTime - initialTime ) > TIME_OUT_SEND ) {
 
                         for(int c = 0; c < listBytes.size(); c++) {
                     int num = (Integer)listBytes.poll();
