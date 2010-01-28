@@ -48,19 +48,19 @@ public class ConnectionState {
     }
     
     public final TCP tcp;
-    public State curState;
-    public Connection con;
-    public ThreeWaysHandshake handshake;
-    public ThreeWaysHandshakeClose handshakeClose;
-    public PacketTCP lastPacket;
-    public ArrayBlockingQueue<Byte> toSend;
-    public PacketTCP waitingAck;
-    public InterlayerData waitingAckData;
-    public String seqNumber;
+    volatile public State curState;
+    volatile public Connection con;
+    volatile public ThreeWaysHandshake handshake;
+    volatile public ThreeWaysHandshakeClose handshakeClose;
+    volatile public PacketTCP lastPacket;
+    volatile public ArrayBlockingQueue<Byte> toSend;
+    volatile public PacketTCP waitingAck;
+    volatile public InterlayerData waitingAckData;
+    volatile public String seqNumber;
     
     public final Thread sendThread;
     
-    public ConnectionState next_hop_CONNECT_2;
+    volatile public ConnectionState next_hop_CONNECT_2;
     
     public class SenderThread implements Runnable {
 

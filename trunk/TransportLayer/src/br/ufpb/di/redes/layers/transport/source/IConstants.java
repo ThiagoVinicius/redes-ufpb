@@ -11,9 +11,9 @@ package br.ufpb.di.redes.layers.transport.source;
  */
 public interface IConstants {
 
-    public static final int TIME_OUT_CONNECTION = 10000;
+    public static final int TIME_OUT_SEND = 10000;
 
-    public static final int TIME_OUT_PUT = 300;
+    public static final long TIME_OUT_CONNECTION = TIME_OUT_SEND*3;
 
     public static final int MAXIMUM_SEGMENT_LIFETIME = 10000;
 
