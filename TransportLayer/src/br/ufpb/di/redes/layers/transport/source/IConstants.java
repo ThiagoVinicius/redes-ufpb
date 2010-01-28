@@ -11,7 +11,7 @@ package br.ufpb.di.redes.layers.transport.source;
  */
 public interface IConstants {
 
-    public static final int TIME_OUT_CONNECTION = 60000;
+    public static final int TIME_OUT_CONNECTION = 1000;
 
     public static final int TIME_OUT_PUT = 300;
 
@@ -25,7 +25,11 @@ public interface IConstants {
 
     public static final int NUM_BITS_MAX_WINDOW = 4;
 
-     public static final int NUM_BITS_FLAGS = 4;
+    public static final int NUM_BITS_FLAGS = 4;
+     
+    public static final int BUFFER_SIZE = 24;
+    
+    public static final long PACKET_WAIT_TIMEOUT = 10L;
 
 
      public static final int NUM_BITS_HEADER = NUM_BITS_MAX_ACKNUMBER +

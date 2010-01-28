@@ -19,6 +19,8 @@ public class ThreeWaysHandshake implements IConstants {
 
     private String initialSequenceNumber_A;
     private String initialSequenceNumber_B;
+    
+    public PacketTCP thirdWayPacket;
 
     public ThreeWaysHandshake() {
        chooseSeqNumber();
@@ -60,9 +62,11 @@ public class ThreeWaysHandshake implements IConstants {
         packet.setSYNFlag("1");
         packet.setPortLocal(portLocal);
         packet.setPortRemote(portRemote);
+        
+        thirdWayPacket = packet;
 
         logger.debug("Primeira via do handshake executada.");
-
+        
         return packet;
     }
 
@@ -74,15 +78,14 @@ public class ThreeWaysHandshake implements IConstants {
      * @param packetConnection Pacote recebido do transmissor.
      * @return Pacote configurado com numeros e flags do segundo handshake.
      */
-    public PacketTCP secondWay( int portSrc, int portDst,
-            PacketTCP packetConnection ) {
+    public PacketTCP secondWay( int portSrc, int portDst, PacketTCP secondWayPacket) {
 
         String portLocal = parseIntToString(portSrc, NUM_BITS_MAX_PORT);
         String portRemote = parseIntToString(portDst, NUM_BITS_MAX_PORT);
         PacketTCP packet = new PacketTCP( portLocal, portRemote, "" );
 
         packet.setSequenceNumber( initialSequenceNumber_B );
-        int plus = parseStringToInt( packetConnection.getSequenceNumber() ) + 1;
+        int plus = parseStringToInt( secondWayPacket.getSequenceNumber() ) + 1;
         packet.setAckNumber( parseIntToString( plus, NUM_BITS_MAX_ACKNUMBER) );
         packet.setACKFlag("1");
         packet.setSYNFlag("1");
@@ -98,17 +101,17 @@ public class ThreeWaysHandshake implements IConstants {
      * @param packetReply Pacote resposta do receptor.
      * @return Pacote configurado com numeros e flags do terceiro handshake.
      */
-    public PacketTCP thirdWay( int portSrc, int portDst,
-            PacketTCP packetReply ) {
+    public PacketTCP thirdWay( int portSrc, int portDst) {
 
         String portLocal = parseIntToString(portSrc, NUM_BITS_MAX_PORT);
         String portRemote = parseIntToString(portDst, NUM_BITS_MAX_PORT);
         PacketTCP packet = new PacketTCP( portLocal, portRemote, "" );
 
-        packet.setSequenceNumber(packetReply.getAckNumber());
-        int plus = parseStringToInt(packetReply.getSequenceNumber()) + 1;
+        packet.setSequenceNumber(thirdWayPacket.getAckNumber());
+        int plus = parseStringToInt(thirdWayPacket.getSequenceNumber()) + 1;
         packet.setAckNumber( parseIntToString(plus, NUM_BITS_MAX_ACKNUMBER) );
         packet.setSYNFlag("0");
+        packet.setACKFlag("1");
 
         logger.debug("Terceira via do handshake executada.");
         

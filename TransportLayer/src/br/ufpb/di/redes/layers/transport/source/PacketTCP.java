@@ -5,6 +5,7 @@
 
 package br.ufpb.di.redes.layers.transport.source;
 
+import br.ufpb.di.redes.layers.all.InterlayerData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,6 +87,19 @@ public class PacketTCP implements IConstants {
    public String toString() {
         return (portLocal + portRemote + sequenceNumber + ackNumber +
                 windowSize + ACK + RST + SYN + FIN + data);
+    }
+    
+    public InterlayerData getInterlayerData () {
+        String asString = toString();
+        InterlayerData result = new InterlayerData(asString.length());
+        for (int i = 0; i < asString.length(); ++i) {
+            if (asString.charAt(i) == '1') {
+                result.setBit(i);
+            } else {
+                result.clearBit(i);
+            }
+        }
+        return result;
     }
 
     public String getACKFlag() {
