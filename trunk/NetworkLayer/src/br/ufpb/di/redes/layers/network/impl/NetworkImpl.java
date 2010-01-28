@@ -454,22 +454,4 @@ public class NetworkImpl extends Network {
         }
         return false;
     }
-    /**
-     *Este metedo verifica de se um determidado ip esta ou nao na minha rede
-     *
-     * @param ip ip a ser verificado,
-     *
-     * @return true caso o ip se encontre na rede, ou false caso contrario
-     *
-     */
-    private boolean ipAtNetwork(int ip){
-        for(int i=0;i<source_ips.length;i++){
-
-            if(splitIP(source_ips[i])[0]==splitIP(ip)[0]){
-                return true;
-            }
-
-        }
-        return false;
-    }
 }
