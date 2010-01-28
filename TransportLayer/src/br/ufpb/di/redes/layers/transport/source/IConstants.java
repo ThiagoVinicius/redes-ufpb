@@ -11,7 +11,7 @@ package br.ufpb.di.redes.layers.transport.source;
  */
 public interface IConstants {
 
-    public static final int TIME_OUT_CONNECTION = 1000;
+    public static final int TIME_OUT_CONNECTION = 10000;
 
     public static final int TIME_OUT_PUT = 300;
 
