@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Esta classe representa uma conexao entre dois pontos.
@@ -16,6 +18,8 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @author Thiago
  */
 public class Connection {
+
+    private static Logger logger = LoggerFactory.getLogger(Connection.class);
 
     private class Output extends OutputStream {
 
@@ -30,16 +34,24 @@ public class Connection {
 
         public LinkedBlockingQueue<Integer> buffer;
 
+        public Input() {
+            buffer = new LinkedBlockingQueue<Integer> ();
+        }
+        
         @Override
         public int read() throws IOException {
             try {
-                return buffer.take();
+                int result = buffer.take();
+                logger.debug("dados lidos! {}", result);
+                return result;
             } catch (InterruptedException ex) {
                 throw new IOException(ex);
             }
         }
 
         protected void put (int b) {
+
+            logger.debug("adicionando no buffer: {}", b);
             buffer.add(b);
         }
 
@@ -123,6 +135,31 @@ public class Connection {
         hash = 67 * hash + this.destIp;
         return hash;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+
+        result.append("local port: ");
+        result.append(localPort);
+        result.append("\n");
+
+        result.append("remote port: ");
+        result.append(remotePort);
+        result.append("\n");
+
+        result.append("local ip: ");
+        result.append(sourceIp);
+        result.append("\n");
+
+        result.append("remote ip: ");
+        result.append(destIp);
+        //result.append("\n");
+
+        return result.toString();
+    }
+
+
 
 
     
