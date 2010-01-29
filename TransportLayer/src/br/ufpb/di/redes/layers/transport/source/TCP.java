@@ -43,32 +43,33 @@ public class TCP extends Transport {
         }
     }
 
+
     public TCP(Network downLayer) {
         super(downLayer);
         this.connections = new Hashtable<Connection, ConnectionState> ();
+
         listen_avail = new HashSet<Integer>(Arrays.asList(
                 new Integer [] {8, 9, 10, 11, 12, 13, 14, 15}));
-        listen_avail = Collections.synchronizedSet(listen_avail);
-        
-        
+        listen_avail = Collections.synchronizedSet(listen_avail);      
     }
-    
+
+
     @Override
     protected void close(Connection con) {
 
         ConnectionState state = connections.get(con);
+
         if (state == null) {
             return;
         }
+
         boolean goodToGo = false;
 
         synchronized (this) {
-
             if (state.curState == ConnectionState.State.CONNECTED) {
                 state.curState = ConnectionState.State.CLOSE_1;
                 goodToGo = true;
             }
-
         }
 
         if (goodToGo) {
@@ -101,14 +102,12 @@ public class TCP extends Transport {
                         try {
                             //timeout(Math.abs(IConstants.TIME_OUT_CONNECTION - elapsedTime));
                             wait(IConstants.TIME_OUT_CONNECTION - elapsedTime);
-                        } catch (InterruptedException ex) {
-                        }
+                        } catch (InterruptedException ex) { }
                     }
                 }
 
                 break;
             }
-
 
         }
 
@@ -659,10 +658,10 @@ public class TCP extends Transport {
         }
         
         String seqNumber = state.seqNumber;
-        if (seqNumber.equals("0001")) {
-            seqNumber = "0000";
+        if (seqNumber.equals("1")) {
+            seqNumber = "0";
         } else {
-            seqNumber = "0001";
+            seqNumber = "1";
         }
         
         state.seqNumber = seqNumber;
