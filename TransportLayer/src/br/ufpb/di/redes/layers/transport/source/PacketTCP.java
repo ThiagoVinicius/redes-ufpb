@@ -24,7 +24,6 @@ public class PacketTCP implements IConstants {
     private String windowSize;
 
     private String ACK;
-    private String RST;
     private String SYN;
     private String FIN;
 
@@ -33,12 +32,11 @@ public class PacketTCP implements IConstants {
     public PacketTCP(String portLocal, String portRemote, String data) {
         this.portLocal = portLocal;
         this.portRemote = portRemote;
-        this.sequenceNumber = "0000";
-        this.ackNumber = "1111";
-        this.windowSize = "0000";
+        this.sequenceNumber = "0";
+        this.ackNumber = "1";
+        this.windowSize = "000";
 
         this.ACK = "0";
-        this.RST = "0";
         this.SYN = "0";
         this.FIN = "0";
 
@@ -66,9 +64,6 @@ public class PacketTCP implements IConstants {
         this.ACK = stream.substring(initial, last);
 
         initial = last; last = initial+1;
-        this.RST = stream.substring(initial, last);
-
-        initial = last; last = initial+1;
         this.SYN = stream.substring(initial, last);
         
         initial = last; last = initial+1;
@@ -86,7 +81,7 @@ public class PacketTCP implements IConstants {
     @Override
    public String toString() {
         return (portLocal + portRemote + sequenceNumber + ackNumber +
-                windowSize + ACK + RST + SYN + FIN + data);
+                windowSize + ACK + SYN + FIN + data);
     }
     
     public InterlayerData getInterlayerData () {
@@ -148,14 +143,6 @@ public class PacketTCP implements IConstants {
 
     public void setPortRemote(String portRemote) {
         this.portRemote = portRemote;
-    }
-
-    public String getRSTFlag() {
-        return RST;
-    }
-
-    public void setRSTFlag(String RST) {
-        this.RST = RST;
     }
 
     public String getSequenceNumber() {

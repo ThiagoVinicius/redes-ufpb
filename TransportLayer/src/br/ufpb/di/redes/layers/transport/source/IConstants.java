@@ -17,15 +17,15 @@ public interface IConstants {
 
     public static final int MAXIMUM_SEGMENT_LIFETIME = 10000;
 
-    public static final int NUM_BITS_MAX_ACKNUMBER = 4;
+    public static final int NUM_BITS_MAX_ACKNUMBER = 1;
 
-    public static final int NUM_BITS_MAX_SEQNUMBER = 4;
+    public static final int NUM_BITS_MAX_SEQNUMBER = 1;
 
     public static final int NUM_BITS_MAX_PORT = 4;
 
-    public static final int NUM_BITS_MAX_WINDOW = 4;
+    public static final int NUM_BITS_MAX_WINDOW = 3;
 
-    public static final int NUM_BITS_FLAGS = 4;
+    public static final int NUM_BITS_FLAGS = 3;
      
     public static final int BUFFER_SIZE = 24;
     
