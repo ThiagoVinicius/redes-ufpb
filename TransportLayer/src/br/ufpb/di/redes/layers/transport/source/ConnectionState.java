@@ -40,7 +40,7 @@ public class ConnectionState {
         this.con = con;
         toSend = new ArrayBlockingQueue<Byte>(IConstants.BUFFER_SIZE);
         this.tcp = tcp;
-        seqNumber = "0001";
+        seqNumber = "1";
         
         sendThread = new Thread(new SenderThread());
         sendThread.start();
