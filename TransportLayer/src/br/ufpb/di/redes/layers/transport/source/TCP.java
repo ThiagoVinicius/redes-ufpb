@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package br.ufpb.di.redes.layers.transport.source;
 
 import br.ufpb.di.redes.layers.all.InterlayerData;
@@ -16,13 +11,16 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Protocolo implementado baseado no TCP.
+ * Com conexao e confiavel.
+ * Transicao de pacotes utilizando stop-and-wait.
  *
- * @author jailton
+ * @author Jailton Maciel
+ * @author Rafael Martin
  */
 public class TCP extends Transport {
     
@@ -32,18 +30,13 @@ public class TCP extends Transport {
     
     private static final Logger logger = LoggerFactory.getLogger(TCP.class);
 
-    private void timeout (long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException ex) {
-            java.util.logging.Logger.getLogger(TCP.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        synchronized (this) {
-            notifyAll();
-        }
-    }
 
-
+    /**
+     * Construtor que recebe por parametro o objeto da camada de rede e inicializa
+     * a tabela de conexoes, juntamente com com listen_available. Portas 8-15.
+     *
+     * @param downLayer Objeto da camada de rede.
+     */
     public TCP(Network downLayer) {
         super(downLayer);
         this.connections = new Hashtable<Connection, ConnectionState> ();
@@ -54,6 +47,13 @@ public class TCP extends Transport {
     }
 
 
+    /**
+     * Metodo que transita entre os estados CLOSE_1 E CLOSED para encerrar uma
+     * conexao, com timeout caso venha alguma mensagem do receptor que recebe a
+     * flag FIN, efetuado pelo close request.
+     *
+     * @param con Conexao a ser encerrada.
+     */
     @Override
     protected void close(Connection con) {
 
@@ -100,7 +100,6 @@ public class TCP extends Transport {
                             break;
                         }
                         try {
-                            //timeout(Math.abs(IConstants.TIME_OUT_CONNECTION - elapsedTime));
                             wait(IConstants.TIME_OUT_CONNECTION - elapsedTime);
                         } catch (InterruptedException ex) { }
                     }
@@ -113,6 +112,17 @@ public class TCP extends Transport {
 
     }
 
+
+    /**
+     * Metodo que ira' enviar um connect request, caso tenha espaco na lista,
+     * utilizando a primeira via do handshake. E utilizando o timeout, pois se
+     * a tentativa de conexao seja falha, lancara' a excecao UnableToConnectException.
+     *
+     * @param dest_ip Inteiro representando o IP remoto.
+     * @param remote_port Inteiro representando a porta remota.
+     * @return Uma nova conexao.
+     * @throws UnnableToConnectException Nao conseguiu conectar.
+     */
     @Override
     public Connection connect(int dest_ip, int remote_port) throws UnnableToConnectException {
         
@@ -141,7 +151,7 @@ public class TCP extends Transport {
         
         ConnectionState state = connections.get(newCon);
         
-        //primeira via do handshake
+        /*********************Primeira via do handshake*********************/
         long initialTime, finalTime;
         long elapsedTime;
         
@@ -157,9 +167,7 @@ public class TCP extends Transport {
         
         bubbleDown(dataFirstWay, dest_ip);
         
-        //state.curState = ConnectionState.State.CONNECT_1;
-        
-        initialTime = System.currentTimeMillis();
+       initialTime = System.currentTimeMillis();
 
         synchronized (this) {
             while (state.curState != ConnectionState.State.CONNECTED) {
@@ -170,22 +178,22 @@ public class TCP extends Transport {
                     throw new UnnableToConnectException();
                 }
                 try {
-                    //timeout(Math.abs(IConstants.TIME_OUT_CONNECTION - elapsedTime));
                     wait(IConstants.TIME_OUT_CONNECTION - elapsedTime);
-                    //wait(finalTime);
-                    //logger.error("Introduzindo atraso");
-                    
-                    //Thread.sleep(Math.abs(IConstants.TIME_OUT_CONNECTION - elapsedTime));
-                } catch (InterruptedException ex) {
-                }
+                } catch (InterruptedException ex) {}
             }
         }
-        
-        
+              
         return newCon;
         
     }
 
+
+    /**
+     * Metodo que apontara' se uma conexao esta' ativa ou nao.
+     *
+     * @param con Conexao que se quer' avaliar.
+     * @return true ou false.
+     */
     @Override
     protected boolean isActive(Connection con) {
         ConnectionState state = connections.get(con);
@@ -195,6 +203,14 @@ public class TCP extends Transport {
                state.curState == ConnectionState.State.WAIT_ACK;
     }
 
+
+    /**
+     * Metodo que aguarda uma conexao, e tera' transicao do estado CONNECT_2
+     * para o CONNECTED, a conexao sendo bem sucedida.
+     *
+     * @param local_port Inteiro representando a porta local.
+     * @return Objeto da conexao.
+     */
     @Override
     public Connection listen(int local_port) {
         
@@ -203,7 +219,7 @@ public class TCP extends Transport {
         ConnectionState old = connections.get(newCon);
         
         if (old != null) {
-            //FIXME
+            //FIX ME
             logger.debug("Porta ocupada. o.O");
             return null;
         }
@@ -215,7 +231,7 @@ public class TCP extends Transport {
         
         connections.put(newCon, state);
         
-        //aguardando conexao
+        /*************************Aguardando conexao*************************/
         logger.debug("Aguardando connection request.");
         
         synchronized (this) {
@@ -237,20 +253,24 @@ public class TCP extends Transport {
                 }
             }
         }
-        
-        
+             
         logger.debug("Listen retornando.");
         
         return state.con;
-        
-        
+           
     }
 
+
+    /**
+     * Metodo que recebera' os dados da camada inferior, e com flags e estados
+     * setados, os dados serao tratados da forma correta.
+     *
+     * @param data Dados da camada inferior
+     * @param source_ip Inteiro representando um IP local.
+     */
     @Override
     protected void processReceivedData(InterlayerData data, int source_ip) {
-        
-        //int header = data.takeInfo(0, IConstants.NUM_BITS_HEADER);
-        
+               
         StringBuilder sb = new StringBuilder(data.length);
         for (int i = 0; i < data.length; ++i) {
             if (data.getBit(i)) {
@@ -262,7 +282,7 @@ public class TCP extends Transport {
         
         PacketTCP pack = new PacketTCP(sb.toString());
 
-        //connection reply
+        /*************************Connection reply*************************/
         if (pack.getACKFlag().equals("1") && pack.getSYNFlag().equals("1")) {
             
             logger.debug("recebido connection reply");
@@ -303,7 +323,7 @@ public class TCP extends Transport {
             }
         }
         
-        //connect request
+        /*************************Connect request*************************/
         else if (pack.getACKFlag().equals("0") && pack.getSYNFlag().equals("1")) {
             
             logger.debug("recebido connect request");
@@ -322,7 +342,7 @@ public class TCP extends Transport {
             if (oldConnection.curState == ConnectionState.State.LISTEN) {
                 
                 connections.remove(oldConnection.con);
-                //Connection newConnection = new Connection(local_port, remote_port, remote_ip, local_ip, this);
+                
                 Connection newConnection = new Connection(local_port, remote_port, remote_ip, local_ip, this);
                 
                 connections.put(newConnection, new ConnectionState(ConnectionState.State.LISTEN, newConnection, this));
@@ -353,7 +373,8 @@ public class TCP extends Transport {
             
             
         }
-        //close request
+        /*************************Close request*************************/
+
         else if (pack.getACKFlag().equals("0") && pack.getFINFlag().equals("1")) {
             
             logger.debug("recebido close request");
@@ -401,7 +422,7 @@ public class TCP extends Transport {
 
             
         }
-        //close reply
+        /*************************Close reply*************************/
         else if (pack.getACKFlag().equals("1") && pack.getFINFlag().equals("1")) {
             
             logger.debug("recebido close reply");
@@ -439,7 +460,7 @@ public class TCP extends Transport {
             
         }
         
-        //ACK
+        /*************************ACK*************************/
         else if (pack.getACKFlag().equals("1") && pack.getFINFlag().equals("0") &&
                  pack.getSYNFlag().equals("0")) {
             
@@ -470,7 +491,7 @@ public class TCP extends Transport {
                     state.curState = ConnectionState.State.CONNECTED;
                     state.lastPacket = pack;
                     logger.debug("Ack era para conexao. Conectado!");
-//                    logger.debug("Conexao estabelecida");
+
                     notifyAll();
                     return;
                 }
@@ -487,16 +508,13 @@ public class TCP extends Transport {
 
                 state.lastPacket = pack;
                 state.curState = ConnectionState.State.CONNECTED;
-                //connections.remove(state.con);
-
-                //listen_avail.add(state.con.localPort);
 
                 logger.debug("Recebido ACK. pacote foi enviado com sucesso.");
             }
             
         }
         
-        //Dados
+        /*************************Dados*************************/
         else if (pack.getACKFlag().equals("0") && pack.getFINFlag().equals("0") &&
                  pack.getSYNFlag().equals("0")) {
             
@@ -520,7 +538,6 @@ public class TCP extends Transport {
                 if (state.curState != ConnectionState.State.CONNECTED &&
                     state.curState != ConnectionState.State.WAIT_ACK) {
                     return;
-                    //state.curState = ConnectionState.State.CLOSE_3;
                 }
             }
             
@@ -535,7 +552,6 @@ public class TCP extends Transport {
                     last += 8;
                 }
             }
-            //state.lastPacket = pack;
             
             PacketTCP ack = new PacketTCP(
                 parseIntToString(state.con.localPort, IConstants.NUM_BITS_MAX_PORT), 
@@ -551,8 +567,7 @@ public class TCP extends Transport {
             
             logger.debug("Pacote recebido. Ack enviado.");
             
-        }
-        
+        }    
 
         synchronized (this) {
             notifyAll();
@@ -560,6 +575,13 @@ public class TCP extends Transport {
         
     }
 
+
+    /**
+     * Recebe os bytes pra enviar.
+     *
+     * @param con Conexao.
+     * @param b Byte.
+     */
     @Override
     protected void put(Connection con, byte b) {
         ConnectionState state = connections.get(con);
@@ -570,16 +592,29 @@ public class TCP extends Transport {
         }
     }
 
+
+    /**
+     * Tamanho maximo do pacote.
+     *
+     * @return Valor do tamanho maximo.
+     */
     @Override
     public int maxPacketSize() {
         return downLayer.maxPacketSize() - IConstants.NUM_BITS_HEADER;
     }
 
+
+    /**
+     * Tamanho minimo do pacote.
+     *
+     * @return Valor do tamanha minimo
+     */
     @Override
     public int minPacketSize() {
         return 8;
     }
-    
+
+
     /**
       * Transforma um numero inteiro para um string, especificando o numero de
       * bits dessa cadeia, caso o valor seja maior que o numero de bits, ira'
@@ -607,7 +642,8 @@ public class TCP extends Transport {
 
          return string;
      }
-     
+
+
      /**
      * Dado uma cadeia de string de 0s e 1s, ira' retornar um inteiro.
      *
@@ -618,12 +654,26 @@ public class TCP extends Transport {
 
         return Integer.parseInt(value, 2);
      }
-     
+
+
+    /**
+     * Facilita o reconhecimento nos logs.
+     *
+     * @return Nome.
+     */
     @Override
     public String getName(){
         return "TRANSPORTE " + downLayer.getIp();
     }
 
+
+    /**
+     * Empacota e envia pacote, com timeout de ACK. Caso der timeout, reenvia
+     * pacote.
+     *
+     * @param con Conexao que se queira mandar dados.
+     * @param data Dados organizados em octetos.
+     */
     protected void send(Connection con, List<Byte> data) {
         
         if (!isActive(con))
@@ -643,8 +693,7 @@ public class TCP extends Transport {
                     }
                 }
             }
-        
-            
+               
             state.curState = ConnectionState.State.WAIT_ACK;
         
         }
@@ -697,8 +746,7 @@ public class TCP extends Transport {
                     }
                     try {
                         wait(IConstants.TIME_OUT_SEND - elapsedTime);
-                    } catch (InterruptedException ex) {
-                    }
+                    } catch (InterruptedException ex) {}
                 }
             }
 
@@ -707,25 +755,34 @@ public class TCP extends Transport {
             }
 
         }
-        
-        
+              
     }
 
+
+    /**
+     * Envia dados para a camada inferior.
+     *
+     * @param data Dados.
+     * @param dest_ip IP remoto.
+     */
     @Override
     protected void bubbleDown(InterlayerData data, int dest_ip) {
         logger.debug("Enviando mensagem: {}", data);
         super.bubbleDown(data, dest_ip);
     }
 
+
+    /**
+     * Repassa um byte para a conexao especificada.
+     *
+     * @param whereTo Conexao.
+     * @param b Byte.
+     */
     @Override
     protected void bubbleUp(Connection whereTo, int b) {
         logger.debug("Subindo mensagem: {} para {}",
                 Integer.toBinaryString(b), whereTo);
         super.bubbleUp(whereTo, b);
     }
-
-
-    
-    
 
 }
